@@ -49,6 +49,9 @@ const siteSettingsSchema = new mongoose.Schema(
           value: { type: String, required: true },
           label: { type: String, required: true },
           subtext: { type: String, required: true },
+          icon: { type: String, default: 'BookOpen' },
+          isVisible: { type: Boolean, default: true },
+          displayOrder: { type: Number, default: 0 },
         },
       ],
       default: [
@@ -57,27 +60,40 @@ const siteSettingsSchema = new mongoose.Schema(
           value: '20,000+',
           label: 'Books Available',
           subtext: 'Curriculum & fiction in stock',
+          icon: 'BookOpen',
+          isVisible: true,
+          displayOrder: 1,
         },
         {
           id: 'students_served',
           value: '12,000+',
           label: 'Students Served',
           subtext: 'Across universities & schools',
+          icon: 'Users',
+          isVisible: true,
+          displayOrder: 2,
         },
         {
           id: 'money_saved',
           value: 'Rs. 15 Lakhs+',
           label: 'Saved on Books',
           subtext: 'Versus new bookstore MRP',
+          icon: 'Recycle',
+          isVisible: true,
+          displayOrder: 3,
         },
         {
           id: 'delivery_hubs',
           value: '50+',
           label: 'Campus Delivery Hubs',
           subtext: 'Fast dropoff across Nepal',
+          icon: 'Heart',
+          isVisible: true,
+          displayOrder: 4,
         },
       ],
     },
+
 
     // 4. BookCycle & Founder Story
     bookCycle: {

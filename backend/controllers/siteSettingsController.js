@@ -21,7 +21,7 @@ export const getSiteSettings = async (req, res) => {
 // PUT /api/admin/site-settings (Admin Protected)
 export const updateSiteSettings = async (req, res) => {
   try {
-    const { announcement, hero, metrics, bookCycle, contact, commerce } = req.body;
+    const { announcement, hero, metrics, bookCycle, contact, commerce, sections, categories } = req.body;
 
     let settings = await SiteSettings.findOne();
     if (!settings) {
@@ -34,6 +34,8 @@ export const updateSiteSettings = async (req, res) => {
     if (bookCycle) settings.bookCycle = { ...settings.bookCycle.toObject(), ...bookCycle };
     if (contact) settings.contact = { ...settings.contact.toObject(), ...contact };
     if (commerce) settings.commerce = { ...settings.commerce.toObject(), ...commerce };
+    if (sections) settings.sections = { ...settings.sections.toObject(), ...sections };
+    if (categories && Array.isArray(categories)) settings.categories = categories;
 
     await settings.save();
 
