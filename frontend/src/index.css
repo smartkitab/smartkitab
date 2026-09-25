@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-brown: #795238;
+  --color-cream-bg: #FAF6EF;
+  --color-light-cream: #F3EBDD;
+  --color-dark-green: #365314;
+  --color-accent-coral: #E07A5F;
+}
+
+/* Fluid responsive root typography */
+html {
+  /* Clean, compact size on mobile phones so layouts fit without awkward wrapping */
+  font-size: 15.5px;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Small tablets / landscape phones */
+@media (min-width: 640px) {
+  html {
+    font-size: 16.5px;
+  }
+}
+
+/* Laptops / Normal Chrome Desktop */
+@media (min-width: 1024px) {
+  html {
+    font-size: 17.5px;
+  }
+}
+
+/* Large desktop displays */
+@media (min-width: 1280px) {
+  html {
+    font-size: 18px;
+  }
+}
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--color-cream-bg, #FAF6EF);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  color: #2D2D2D;
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button, a {
+  -webkit-tap-highlight-color: transparent;
+}
