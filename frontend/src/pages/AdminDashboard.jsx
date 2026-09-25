@@ -345,6 +345,15 @@ export default function AdminDashboard() {
     showPhoto: true,
   });
 
+  // ================= DYNAMIC IMPACT METRICS STATE =================
+  const [newMetricModalOpen, setNewMetricModalOpen] = useState(false);
+  const [newMetricData, setNewMetricData] = useState({
+    value: '',
+    label: '',
+    subtext: '',
+    icon: 'BookOpen',
+  });
+
   // ================= CMS & Site Settings State =================
   const {
     settings: globalSettings,
@@ -398,6 +407,60 @@ export default function AdminDashboard() {
       const updated = [...(prev?.metrics || [])];
       updated[index] = { ...updated[index], [field]: value };
       return { ...prev, metrics: updated };
+    });
+  };
+
+  const handleAddMetric = () => {
+    if (!newMetricData.label.trim() || !newMetricData.value.trim()) return;
+    const metricId = newMetricData.label.toLowerCase().trim().replace(/[^a-z0-9]+/g, '_');
+    const newMetric = {
+      id: metricId,
+      value: newMetricData.value.trim(),
+      label: newMetricData.label.trim(),
+      subtext: newMetricData.subtext.trim(),
+      icon: newMetricData.icon || 'BookOpen',
+      isVisible: true,
+      displayOrder: (cmsData?.metrics?.length || 0) + 1,
+    };
+    setCmsData((prev) => ({
+      ...prev,
+      metrics: [...(prev.metrics || []), newMetric],
+    }));
+    setNewMetricModalOpen(false);
+    setNewMetricData({ value: '', label: '', subtext: '', icon: 'BookOpen' });
+    showToast(`Added metric "${newMetric.label}". Click Save to persist!`);
+  };
+
+  const handleToggleMetricVisibility = (index) => {
+    setCmsData((prev) => {
+      const mets = [...(prev.metrics || [])];
+      mets[index] = { ...mets[index], isVisible: !mets[index].isVisible };
+      return { ...prev, metrics: mets };
+    });
+  };
+
+  const handleDeleteMetric = (index) => {
+    if (!window.confirm('Are you sure you want to delete this metric card?')) return;
+    setCmsData((prev) => {
+      const mets = [...(prev.metrics || [])];
+      mets.splice(index, 1);
+      return { ...prev, metrics: mets };
+    });
+    showToast('Metric card removed. Click Save to persist!');
+  };
+
+  const handleMoveMetric = (index, direction) => {
+    setCmsData((prev) => {
+      const mets = [...(prev.metrics || [])];
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= mets.length) return prev;
+      const temp = mets[index];
+      mets[index] = mets[targetIndex];
+      mets[targetIndex] = temp;
+      mets.forEach((m, idx) => {
+        m.displayOrder = idx + 1;
+      });
+      return { ...prev, metrics: mets };
     });
   };
 
@@ -2881,74 +2944,175 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* SUB-TAB 1: METRICS */}
+            {/* SUB-TAB: IMPACT METRICS CMS */}
             {cmsSubTab === 'metrics' && (
               <div className="space-y-6">
                 <div className="bg-white rounded-3xl border border-[#795238]/15 p-6 shadow-xs space-y-6">
-                  <div>
-                    <h3 className="text-base font-black text-[#795238]">
-                      Platform Impact Metrics
-                    </h3>
-                    <p className="text-xs text-stone-600 mt-0.5">
-                      Configure the 4 vital platform statistics shown right below the hero on the homepage. Change numbers (e.g. 20,000+ books, 12,000+ students served) and titles at any time.
-                    </p>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-base font-black text-[#795238]">
+                        Platform Impact Metrics (20,000+ Books, 12,000+ Students...)
+                      </h3>
+                      <p className="text-xs text-stone-600 mt-0.5">
+                        Add, edit, delete, reorder, or hide/unhide the key impact counters displayed right below the homepage hero banner.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setNewMetricModalOpen(true)}
+                      className="px-4 py-2.5 rounded-xl bg-[#795238] hover:bg-[#633f27] text-white text-xs font-bold flex items-center gap-2 transition shadow-xs cursor-pointer self-start sm:self-auto shrink-0"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add Metric Card</span>
+                    </button>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {(cmsData?.metrics || []).map((m, idx) => (
-                      <div
-                        key={m.id || idx}
-                        className="p-5 rounded-2xl bg-[#FAF6EF]/70 border border-[#795238]/15 space-y-3"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-black text-[#795238] uppercase tracking-wider">
-                            Metric #{idx + 1} ({m.id})
-                          </span>
-                          <span className="text-[11px] font-bold text-stone-500 bg-white px-2 py-0.5 rounded-full border border-stone-200">
-                            Slot {idx + 1} of 4
-                          </span>
-                        </div>
+                    {(cmsData?.metrics || []).map((m, idx) => {
+                      const IconComponent = ICON_MAP[m.icon] || BookOpen;
+                      const isVisible = m.isVisible !== false;
 
-                        <div>
-                          <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                            Displayed Value (e.g. 20,000+ or Rs. 15 Lakhs+)
-                          </label>
-                          <input
-                            type="text"
-                            value={m.value || ''}
-                            onChange={(e) => updateMetricItem(idx, 'value', e.target.value)}
-                            className="w-full px-3 py-2 text-sm font-black text-[#795238] bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
-                            placeholder="e.g. 20,000+"
-                          />
-                        </div>
+                      return (
+                        <div
+                          key={m.id || idx}
+                          className={`p-5 rounded-2xl border transition-all space-y-3.5 ${
+                            isVisible
+                              ? 'bg-[#FAF6EF]/70 border-[#795238]/15'
+                              : 'bg-stone-50 border-stone-200 opacity-60'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-lg bg-white border border-[#795238]/20 flex items-center justify-center text-[#795238]">
+                                <IconComponent className="w-4 h-4" />
+                              </div>
+                              <span className="text-xs font-black text-[#795238] uppercase tracking-wider">
+                                Card #{idx + 1}
+                              </span>
+                            </div>
 
-                        <div>
-                          <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                            Label Title (e.g. Books Available)
-                          </label>
-                          <input
-                            type="text"
-                            value={m.label || ''}
-                            onChange={(e) => updateMetricItem(idx, 'label', e.target.value)}
-                            className="w-full px-3 py-2 text-xs font-bold text-stone-900 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
-                            placeholder="e.g. Books Available"
-                          />
-                        </div>
+                            <div className="flex items-center gap-1.5">
+                              {/* Move Up */}
+                              <button
+                                type="button"
+                                onClick={() => handleMoveMetric(idx, -1)}
+                                disabled={idx === 0}
+                                title="Move Left / Up"
+                                className="p-1.5 rounded-lg bg-white hover:bg-stone-100 border border-stone-200 text-stone-600 disabled:opacity-30 cursor-pointer"
+                              >
+                                <ArrowUp className="w-3.5 h-3.5" />
+                              </button>
 
-                        <div>
-                          <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                            Subtext / Context Description
-                          </label>
-                          <input
-                            type="text"
-                            value={m.subtext || ''}
-                            onChange={(e) => updateMetricItem(idx, 'subtext', e.target.value)}
-                            className="w-full px-3 py-2 text-xs text-stone-600 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
-                            placeholder="e.g. Curriculum & fiction in stock"
-                          />
+                              {/* Move Down */}
+                              <button
+                                type="button"
+                                onClick={() => handleMoveMetric(idx, 1)}
+                                disabled={idx === (cmsData?.metrics?.length || 0) - 1}
+                                title="Move Right / Down"
+                                className="p-1.5 rounded-lg bg-white hover:bg-stone-100 border border-stone-200 text-stone-600 disabled:opacity-30 cursor-pointer"
+                              >
+                                <ArrowDown className="w-3.5 h-3.5" />
+                              </button>
+
+                              {/* Hide / Show Toggle */}
+                              <button
+                                type="button"
+                                onClick={() => handleToggleMetricVisibility(idx)}
+                                className={`px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 border transition cursor-pointer ${
+                                  isVisible
+                                    ? 'bg-white hover:bg-amber-50 border-amber-200 text-amber-800'
+                                    : 'bg-white hover:bg-emerald-50 border-emerald-200 text-[#365314]'
+                                }`}
+                              >
+                                {isVisible ? (
+                                  <>
+                                    <EyeOff className="w-3 h-3" />
+                                    <span>Hide</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Eye className="w-3 h-3" />
+                                    <span>Show</span>
+                                  </>
+                                )}
+                              </button>
+
+                              {/* Delete Card */}
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteMetric(idx)}
+                                className="p-1.5 rounded-lg bg-white hover:bg-rose-50 border border-rose-200 text-rose-600 cursor-pointer transition hover:bg-rose-100"
+                                title="Delete Metric Card"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[10px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                                Display Value (Number / Milestone) *
+                              </label>
+                              <input
+                                type="text"
+                                value={m.value || ''}
+                                onChange={(e) => updateMetricItem(idx, 'value', e.target.value)}
+                                className="w-full px-3 py-2 text-sm font-black text-[#795238] bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                                placeholder="e.g. 20,000+"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[10px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                                Icon
+                              </label>
+                              <select
+                                value={m.icon || 'BookOpen'}
+                                onChange={(e) => updateMetricItem(idx, 'icon', e.target.value)}
+                                className="w-full px-3 py-2 text-xs font-bold text-stone-900 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                              >
+                                <option value="BookOpen">📖 Book Open</option>
+                                <option value="Users">👥 Users / Students</option>
+                                <option value="Recycle">🔄 Recycle / Circular</option>
+                                <option value="Heart">❤️ Heart / Community</option>
+                                <option value="DollarSign">💰 Money Saved</option>
+                                <option value="TrendingUp">📈 Growth / Trend</option>
+                                <option value="Award">🏆 Award / Quality</option>
+                                <option value="Sparkles">✨ Sparkles / Perks</option>
+                                <option value="GraduationCap">🎓 Graduation Cap</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                              Label Title (Heading) *
+                            </label>
+                            <input
+                              type="text"
+                              value={m.label || ''}
+                              onChange={(e) => updateMetricItem(idx, 'label', e.target.value)}
+                              className="w-full px-3 py-2 text-xs font-bold text-stone-900 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                              placeholder="e.g. Books Available"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                              Subtext / Descriptive Narrative
+                            </label>
+                            <input
+                              type="text"
+                              value={m.subtext || ''}
+                              onChange={(e) => updateMetricItem(idx, 'subtext', e.target.value)}
+                              className="w-full px-3 py-2 text-xs text-stone-600 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                              placeholder="e.g. Curriculum & fiction in stock"
+                            />
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -2965,20 +3129,22 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="bg-white rounded-2xl p-6 border border-[#795238]/15 shadow-sm">
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 divide-y lg:divide-y-0 lg:divide-x divide-[#795238]/10 text-center">
-                      {(cmsData?.metrics || []).map((m, idx) => (
-                        <div key={idx} className="pt-4 lg:pt-0 lg:px-4">
-                          <p className="text-2xl sm:text-3xl font-black text-[#795238] tracking-tight">
-                            {m.value || '—'}
-                          </p>
-                          <p className="text-xs sm:text-sm font-bold text-stone-900 mt-1">
-                            {m.label || '—'}
-                          </p>
-                          <p className="text-[11px] text-stone-500 mt-0.5">
-                            {m.subtext || '—'}
-                          </p>
-                        </div>
-                      ))}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 divide-y lg:divide-y-0 lg:divide-x divide-[#795238]/10 text-center">
+                      {(cmsData?.metrics || [])
+                        .filter((m) => m.isVisible !== false)
+                        .map((m, idx) => (
+                          <div key={idx} className="pt-3 lg:pt-0 lg:px-3">
+                            <p className="text-2xl sm:text-3xl font-black text-[#795238] tracking-tight">
+                              {m.value || '—'}
+                            </p>
+                            <p className="text-xs sm:text-sm font-bold text-stone-900 mt-1">
+                              {m.label || '—'}
+                            </p>
+                            <p className="text-[11px] text-stone-500 mt-0.5">
+                              {m.subtext || '—'}
+                            </p>
+                          </div>
+                        ))}
                     </div>
                   </div>
                 </div>
@@ -5342,6 +5508,146 @@ export default function AdminDashboard() {
                 >
                   <Save className="w-4 h-4" />
                   <span>Update Review</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= ADD NEW METRIC MODAL ================= */}
+      {newMetricModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl border border-[#795238]/20 max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden">
+            <button
+              onClick={() => setNewMetricModalOpen(false)}
+              className="absolute top-5 right-5 p-1.5 rounded-full hover:bg-stone-100 text-stone-500 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 text-xs font-bold text-[#795238] bg-[#FAF6EF] px-3 py-1 rounded-full w-fit">
+              <TrendingUp className="w-4 h-4 text-[#795238]" />
+              <span>Impact Metrics CMS</span>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-black text-stone-900">
+                Add New Impact Counter
+              </h3>
+              <p className="text-xs text-stone-600 mt-0.5">
+                Add a milestone or statistic card (e.g. 5,000+ Trees Saved, 24-Hr Delivery) to the homepage metrics bar.
+              </p>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAddMetric();
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Metric Value (Number / Milestone) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 15,000+ or Rs. 10 Lakhs+"
+                  value={newMetricData.value}
+                  onChange={(e) =>
+                    setNewMetricData({ ...newMetricData, value: e.target.value })
+                  }
+                  className="w-full px-3 py-2 text-sm font-black text-[#795238] bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Label Title (Headline) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Students Empowered"
+                  value={newMetricData.label}
+                  onChange={(e) =>
+                    setNewMetricData({ ...newMetricData, label: e.target.value })
+                  }
+                  className="w-full px-3 py-2 text-sm bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Subtext / Context Description
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Across Kathmandu, Pokhara & Chitwan"
+                  value={newMetricData.subtext}
+                  onChange={(e) =>
+                    setNewMetricData({ ...newMetricData, subtext: e.target.value })
+                  }
+                  className="w-full px-3 py-2 text-xs bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-2">
+                  Select Display Icon
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { name: 'BookOpen', label: 'Books' },
+                    { name: 'Users', label: 'Students' },
+                    { name: 'Recycle', label: 'Circular' },
+                    { name: 'Heart', label: 'Trees/Love' },
+                    { name: 'DollarSign', label: 'Money' },
+                    { name: 'TrendingUp', label: 'Growth' },
+                    { name: 'Award', label: 'Award' },
+                    { name: 'Sparkles', label: 'Perks' },
+                  ].map((ic) => {
+                    const IconC = ICON_MAP[ic.name] || BookOpen;
+                    const isSelected = newMetricData.icon === ic.name;
+                    return (
+                      <button
+                        key={ic.name}
+                        type="button"
+                        onClick={() =>
+                          setNewMetricData({ ...newMetricData, icon: ic.name })
+                        }
+                        className={`flex flex-col items-center gap-1 p-2 rounded-xl border text-center transition cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#795238] text-white border-[#795238] shadow-xs'
+                            : 'bg-[#FAF6EF]/40 text-stone-700 border-stone-200 hover:bg-stone-100'
+                        }`}
+                      >
+                        <IconC className="w-5 h-5" />
+                        <span className="text-[10px] font-bold truncate w-full">
+                          {ic.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setNewMetricModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs cursor-pointer transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-[#795238] hover:bg-[#633f27] text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition shadow-md"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Metric Card</span>
                 </button>
               </div>
             </form>
