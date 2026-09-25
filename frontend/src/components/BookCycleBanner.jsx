@@ -10,10 +10,28 @@ import {
   BookMarked,
   Truck,
   Quote,
+  Clock,
+  BookOpen,
+  Award,
+  Heart,
+  Shield,
+  User,
 } from 'lucide-react';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 
-const FACILITY_ICONS = [FileText, Edit3, RefreshCw, BookMarked, Truck];
+const FACILITY_ICONS_MAP = {
+  FileText,
+  Edit3,
+  RefreshCw,
+  BookMarked,
+  Truck,
+  Clock,
+  BookOpen,
+  Sparkles,
+  Award,
+  Heart,
+  Shield,
+};
 
 export default function BookCycleBanner({
   onJoinClick = () => {},
@@ -24,15 +42,19 @@ export default function BookCycleBanner({
   const bookCycle = settings?.bookCycle || {};
   const founder = bookCycle.founder || {};
 
-  const facilities = bookCycle.facilities && bookCycle.facilities.length > 0
+  const rawFacilities = bookCycle.facilities && bookCycle.facilities.length > 0
     ? bookCycle.facilities
     : [
-        { title: 'Printed Notes', desc: 'Curriculum & syllabus guides' },
-        { title: 'Handwritten Notes', desc: 'Topper study summaries' },
-        { title: 'Free BookCycle', desc: 'Read & rotate indefinitely' },
-        { title: 'Book Requests', desc: 'Sourced within 48 hours' },
-        { title: 'Home Delivery', desc: 'Everywhere in Nepal' },
+        { id: 'fac_1', title: 'Printed Notes', desc: 'Curriculum & syllabus guides', icon: 'FileText', isVisible: true, displayOrder: 1 },
+        { id: 'fac_2', title: 'Handwritten Notes', desc: 'Topper study summaries', icon: 'Sparkles', isVisible: true, displayOrder: 2 },
+        { id: 'fac_3', title: 'Free BookCycle', desc: 'Read & rotate indefinitely', icon: 'RefreshCw', isVisible: true, displayOrder: 3 },
+        { id: 'fac_4', title: 'Book Requests', desc: 'Sourced within 48 hours', icon: 'Clock', isVisible: true, displayOrder: 4 },
+        { id: 'fac_5', title: 'Home Delivery', desc: 'Everywhere in Nepal', icon: 'Truck', isVisible: true, displayOrder: 5 },
       ];
+
+  const displayFacilities = rawFacilities
+    .filter((f) => f.isVisible !== false)
+    .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
 
   const features = bookCycle.features && bookCycle.features.length > 0
     ? bookCycle.features
@@ -42,6 +64,8 @@ export default function BookCycleBanner({
         'Priority Requests for rare titles',
         'Exclusive Discounts on purchases',
       ];
+
+  const showFounderPhoto = founder.showImage !== false && founder.imageUrl && founder.imageUrl.trim().length > 0;
 
   return (
     <section className="bg-cream-bg py-12 sm:py-16">
@@ -134,11 +158,11 @@ export default function BookCycleBanner({
                 </div>
 
                 <div className="space-y-3">
-                  {facilities.map((fac, idx) => {
-                    const IconComponent = FACILITY_ICONS[idx % FACILITY_ICONS.length];
+                  {displayFacilities.map((fac, idx) => {
+                    const IconComponent = FACILITY_ICONS_MAP[fac.icon] || FileText;
                     return (
                       <div
-                        key={idx}
+                        key={fac.id || idx}
                         className="flex items-center gap-3.5 p-2.5 rounded-xl bg-white/70 hover:bg-white border border-primary-brown/10 transition duration-150 shadow-2xs"
                       >
                         <div className="w-9 h-9 rounded-lg bg-primary-brown/10 text-primary-brown flex items-center justify-center shrink-0">
@@ -187,31 +211,47 @@ export default function BookCycleBanner({
 
           </div>
 
-          {/* 3. RIGHT COLUMN: Meet the Founder Card */}
+          {/* 3. RIGHT COLUMN: Meet the Founder / Mission & Story Card */}
           <div className="lg:col-span-4 bg-white border border-primary-brown/15 rounded-3xl p-7 shadow-sm flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-5">
-                <span className="text-xs font-bold uppercase tracking-wider text-stone-500">
-                  Our Mission & Story
-                </span>
-                <Quote className="w-6 h-6 text-primary-brown/25" />
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-stone-500 block">
+                    {bookCycle.missionTitle || 'Our Mission & Story'}
+                  </span>
+                  {bookCycle.missionSubtitle && (
+                    <span className="text-[11px] text-stone-400 block mt-0.5">
+                      {bookCycle.missionSubtitle}
+                    </span>
+                  )}
+                </div>
+                <Quote className="w-6 h-6 text-primary-brown/25 shrink-0" />
               </div>
 
-              {/* Founder Profile Avatar */}
+              {/* Founder Profile Avatar / Badge */}
               <div className="flex items-center gap-4 mb-5">
-                <div className="relative">
-                  <img
-                    src={
-                      founder.imageUrl ||
-                      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=240&h=240&q=80'
-                    }
-                    alt={`${founder.name || 'Shraddha'} - Founder of SMARTKITAB`}
-                    className="w-16 h-16 rounded-2xl object-cover border-2 border-primary-brown/20 shadow-md"
-                  />
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-dark-green text-white rounded-full flex items-center justify-center border-2 border-white text-xs">
-                    ✓
+                {showFounderPhoto ? (
+                  <div className="relative">
+                    <img
+                      src={founder.imageUrl}
+                      alt={`${founder.name || 'Shraddha'} - Founder of SMARTKITAB`}
+                      className="w-16 h-16 rounded-2xl object-cover border-2 border-primary-brown/20 shadow-md"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        if (e.target.nextSibling) {
+                          e.target.nextSibling.style.display = 'flex';
+                        }
+                      }}
+                    />
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-dark-green text-white rounded-full flex items-center justify-center border-2 border-white text-xs">
+                      ✓
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-brown to-stone-800 text-white flex items-center justify-center shadow-md border-2 border-primary-brown/20 shrink-0">
+                    <User className="w-8 h-8 text-amber-200" />
+                  </div>
+                )}
                 <div>
                   <h4 className="text-base sm:text-lg font-black text-primary-brown">
                     {founder.name || 'Shraddha'}
@@ -248,3 +288,4 @@ export default function BookCycleBanner({
     </section>
   );
 }
+

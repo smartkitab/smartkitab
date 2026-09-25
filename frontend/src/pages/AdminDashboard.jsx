@@ -51,12 +51,20 @@ import {
   School,
   Library,
   BookMarked,
-  Recycle,
-  Heart,
+  Edit3,
+  Pencil,
+  MessageSquareHeart,
+  Quote,
+  User,
+  Image,
+  Share2,
+  HeartHandshake,
   Award,
   Trophy,
   Shield,
   CheckCircle,
+  Recycle,
+  Heart,
 } from 'lucide-react';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 
@@ -85,8 +93,18 @@ const ICON_MAP = {
   TrendingUp,
   DollarSign,
   Star,
+  FileText,
+  Truck,
+  Clock,
+  Edit3,
+  Pencil,
+  MessageSquareHeart,
+  Quote,
+  User,
+  Image,
+  Share2,
+  HeartHandshake,
 };
-
 
 // Fallback initial data in case the API is offline or returns empty
 const initialFallbackPendingBooks = [
@@ -272,20 +290,59 @@ export default function AdminDashboard() {
     },
   });
 
-  // ================= DYNAMIC CATEGORY & METRIC MODAL STATE =================
+  // ================= DYNAMIC CATEGORY MODAL STATE =================
   const [newCatModalOpen, setNewCatModalOpen] = useState(false);
   const [newCatData, setNewCatData] = useState({
     name: '',
     description: '',
     icon: 'BookOpen',
   });
-
-  const [newMetricModalOpen, setNewMetricModalOpen] = useState(false);
-  const [newMetricData, setNewMetricData] = useState({
-    value: '',
-    label: '',
-    subtext: '',
+  const [editCatModalOpen, setEditCatModalOpen] = useState(false);
+  const [editCatData, setEditCatData] = useState({
+    index: -1,
+    id: '',
+    name: '',
+    description: '',
     icon: 'BookOpen',
+    displayOrder: 1,
+  });
+
+  // ================= DYNAMIC FACILITIES STATE =================
+  const [newFacilityModalOpen, setNewFacilityModalOpen] = useState(false);
+  const [newFacilityData, setNewFacilityData] = useState({
+    title: '',
+    desc: '',
+    icon: 'BookOpen',
+  });
+  const [editFacilityModalOpen, setEditFacilityModalOpen] = useState(false);
+  const [editFacilityData, setEditFacilityData] = useState({
+    index: -1,
+    id: '',
+    title: '',
+    desc: '',
+    icon: 'BookOpen',
+  });
+
+  // ================= DYNAMIC TESTIMONIALS STATE =================
+  const [newTestimonialModalOpen, setNewTestimonialModalOpen] = useState(false);
+  const [newTestimonialData, setNewTestimonialData] = useState({
+    name: '',
+    role: '',
+    quote: '',
+    rating: 5,
+    photoUrl: '',
+    showPhoto: true,
+  });
+  const [editTestimonialModalOpen, setEditTestimonialModalOpen] = useState(false);
+  const [editTestimonialData, setEditTestimonialData] = useState({
+    index: -1,
+    id: '',
+    name: '',
+    role: '',
+    quote: '',
+    rating: 5,
+    photoUrl: '',
+    showPhoto: true,
   });
 
   // ================= CMS & Site Settings State =================
@@ -296,7 +353,7 @@ export default function AdminDashboard() {
   } = useSiteSettings();
 
   const [cmsData, setCmsData] = useState(globalSettings);
-  const [cmsSubTab, setCmsSubTab] = useState('metrics'); // 'metrics' | 'announcement' | 'hero' | 'bookcycle' | 'contact' | 'commerce'
+  const [cmsSubTab, setCmsSubTab] = useState('metrics'); // 'metrics' | 'announcement' | 'hero' | 'bookcycle' | 'facilities' | 'testimonials' | 'social' | 'contact' | 'commerce'
   const [savingCms, setSavingCms] = useState(false);
 
   useEffect(() => {
@@ -336,67 +393,6 @@ export default function AdminDashboard() {
     }));
   };
 
-  // Metric Cards Management inside CMS
-  const handleAddMetric = () => {
-    if (!newMetricData.value.trim() || !newMetricData.label.trim()) return;
-    const metricId =
-      newMetricData.label.toLowerCase().trim().replace(/[^a-z0-9]+/g, '_') +
-      '_' +
-      Date.now().toString().slice(-4);
-    const newMetric = {
-      id: metricId,
-      value: newMetricData.value.trim(),
-      label: newMetricData.label.trim(),
-      subtext: newMetricData.subtext.trim(),
-      icon: newMetricData.icon || 'BookOpen',
-      isVisible: true,
-      displayOrder: (cmsData?.metrics?.length || 0) + 1,
-    };
-    setCmsData((prev) => ({
-      ...prev,
-      metrics: [...(prev.metrics || []), newMetric],
-    }));
-    setNewMetricModalOpen(false);
-    setNewMetricData({ value: '', label: '', subtext: '', icon: 'BookOpen' });
-    showToast(`Added metric card "${newMetric.label}". Click Save to persist!`);
-  };
-
-  const handleToggleMetricVisibility = (index) => {
-    setCmsData((prev) => {
-      const metrics = [...(prev.metrics || [])];
-      metrics[index] = {
-        ...metrics[index],
-        isVisible: metrics[index].isVisible === false ? true : false,
-      };
-      return { ...prev, metrics };
-    });
-  };
-
-  const handleDeleteMetric = (index) => {
-    if (!window.confirm('Are you sure you want to remove this metric card?')) return;
-    setCmsData((prev) => {
-      const metrics = [...(prev.metrics || [])];
-      metrics.splice(index, 1);
-      return { ...prev, metrics };
-    });
-    showToast('Metric card removed. Click Save to persist!');
-  };
-
-  const handleMoveMetric = (index, direction) => {
-    setCmsData((prev) => {
-      const metrics = [...(prev.metrics || [])];
-      const targetIndex = index + direction;
-      if (targetIndex < 0 || targetIndex >= metrics.length) return prev;
-      const temp = metrics[index];
-      metrics[index] = metrics[targetIndex];
-      metrics[targetIndex] = temp;
-      metrics.forEach((m, idx) => {
-        m.displayOrder = idx + 1;
-      });
-      return { ...prev, metrics };
-    });
-  };
-
   const updateMetricItem = (index, field, value) => {
     setCmsData((prev) => {
       const updated = [...(prev?.metrics || [])];
@@ -404,7 +400,6 @@ export default function AdminDashboard() {
       return { ...prev, metrics: updated };
     });
   };
-
 
   const updateFounderField = (field, value) => {
     setCmsData((prev) => ({
@@ -468,6 +463,49 @@ export default function AdminDashboard() {
     showToast(`Added category "${newCategory.name}". Click Save to persist!`);
   };
 
+  const handleOpenEditCategory = (index, cat) => {
+    setEditCatData({
+      index,
+      id: cat.id || `cat_${index}`,
+      name: cat.name || '',
+      description: cat.description || '',
+      icon: cat.icon || 'BookOpen',
+      displayOrder: cat.displayOrder ?? index + 1,
+    });
+    setEditCatModalOpen(true);
+  };
+
+  const handleSaveEditCategory = (e) => {
+    if (e) e.preventDefault();
+    if (!editCatData.name.trim()) return;
+    setCmsData((prev) => {
+      const cats = [...(prev.categories || [])];
+      if (editCatData.index >= 0 && editCatData.index < cats.length) {
+        cats[editCatData.index] = {
+          ...cats[editCatData.index],
+          name: editCatData.name.trim(),
+          description: editCatData.description.trim(),
+          icon: editCatData.icon || 'BookOpen',
+          displayOrder: Number(editCatData.displayOrder) || editCatData.index + 1,
+        };
+      }
+      return { ...prev, categories: cats };
+    });
+    setEditCatModalOpen(false);
+    showToast(`Updated category "${editCatData.name}". Click Save to persist!`);
+  };
+
+  const handleUpdateCategoryRank = (index, newRank) => {
+    const rankNum = parseInt(newRank, 10);
+    setCmsData((prev) => {
+      const cats = [...(prev.categories || [])];
+      if (cats[index]) {
+        cats[index] = { ...cats[index], displayOrder: isNaN(rankNum) ? 1 : rankNum };
+      }
+      return { ...prev, categories: cats };
+    });
+  };
+
   const handleToggleCategoryVisibility = (index) => {
     setCmsData((prev) => {
       const cats = [...(prev.categories || [])];
@@ -499,6 +537,224 @@ export default function AdminDashboard() {
       });
       return { ...prev, categories: cats };
     });
+  };
+
+  // Facilities management inside CMS
+  const handleAddFacility = () => {
+    if (!newFacilityData.title.trim()) return;
+    const facId = newFacilityData.title.toLowerCase().trim().replace(/[^a-z0-9]+/g, '_');
+    const newFacility = {
+      id: facId,
+      title: newFacilityData.title.trim(),
+      desc: newFacilityData.desc.trim(),
+      icon: newFacilityData.icon || 'BookOpen',
+      isVisible: true,
+      displayOrder: (cmsData?.bookCycle?.facilities?.length || 0) + 1,
+    };
+    setCmsData((prev) => ({
+      ...prev,
+      bookCycle: {
+        ...(prev?.bookCycle || {}),
+        facilities: [...(prev?.bookCycle?.facilities || []), newFacility],
+      },
+    }));
+    setNewFacilityModalOpen(false);
+    setNewFacilityData({ title: '', desc: '', icon: 'BookOpen' });
+    showToast(`Added facility "${newFacility.title}". Click Save to persist!`);
+  };
+
+  const handleOpenEditFacility = (index, fac) => {
+    setEditFacilityData({
+      index,
+      id: fac.id || `fac_${index}`,
+      title: fac.title || '',
+      desc: fac.desc || '',
+      icon: fac.icon || 'BookOpen',
+    });
+    setEditFacilityModalOpen(true);
+  };
+
+  const handleSaveEditFacility = (e) => {
+    if (e) e.preventDefault();
+    if (!editFacilityData.title.trim()) return;
+    setCmsData((prev) => {
+      const facs = [...(prev?.bookCycle?.facilities || [])];
+      if (editFacilityData.index >= 0 && editFacilityData.index < facs.length) {
+        facs[editFacilityData.index] = {
+          ...facs[editFacilityData.index],
+          title: editFacilityData.title.trim(),
+          desc: editFacilityData.desc.trim(),
+          icon: editFacilityData.icon || 'BookOpen',
+        };
+      }
+      return {
+        ...prev,
+        bookCycle: {
+          ...(prev?.bookCycle || {}),
+          facilities: facs,
+        },
+      };
+    });
+    setEditFacilityModalOpen(false);
+    showToast(`Updated facility "${editFacilityData.title}". Click Save to persist!`);
+  };
+
+  const handleToggleFacilityVisibility = (index) => {
+    setCmsData((prev) => {
+      const facs = [...(prev?.bookCycle?.facilities || [])];
+      facs[index] = { ...facs[index], isVisible: !facs[index].isVisible };
+      return {
+        ...prev,
+        bookCycle: {
+          ...(prev?.bookCycle || {}),
+          facilities: facs,
+        },
+      };
+    });
+  };
+
+  const handleDeleteFacility = (index) => {
+    if (!window.confirm('Are you sure you want to remove this facility card?')) return;
+    setCmsData((prev) => {
+      const facs = [...(prev?.bookCycle?.facilities || [])];
+      facs.splice(index, 1);
+      return {
+        ...prev,
+        bookCycle: {
+          ...(prev?.bookCycle || {}),
+          facilities: facs,
+        },
+      };
+    });
+    showToast('Facility card removed. Click Save to persist!');
+  };
+
+  const handleMoveFacility = (index, direction) => {
+    setCmsData((prev) => {
+      const facs = [...(prev?.bookCycle?.facilities || [])];
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= facs.length) return prev;
+      const temp = facs[index];
+      facs[index] = facs[targetIndex];
+      facs[targetIndex] = temp;
+      facs.forEach((f, idx) => {
+        f.displayOrder = idx + 1;
+      });
+      return {
+        ...prev,
+        bookCycle: {
+          ...(prev?.bookCycle || {}),
+          facilities: facs,
+        },
+      };
+    });
+  };
+
+  // Testimonials management inside CMS
+  const handleAddTestimonial = () => {
+    if (!newTestimonialData.name.trim()) return;
+    const testId = `test_${Date.now()}`;
+    const newTest = {
+      id: testId,
+      name: newTestimonialData.name.trim(),
+      role: newTestimonialData.role.trim() || 'Student / Reader',
+      quote: newTestimonialData.quote.trim(),
+      rating: Number(newTestimonialData.rating) || 5,
+      photoUrl: newTestimonialData.photoUrl.trim(),
+      showPhoto: Boolean(newTestimonialData.showPhoto),
+      isVisible: true,
+      displayOrder: (cmsData?.testimonials?.length || 0) + 1,
+    };
+    setCmsData((prev) => ({
+      ...prev,
+      testimonials: [...(prev.testimonials || []), newTest],
+    }));
+    setNewTestimonialModalOpen(false);
+    setNewTestimonialData({ name: '', role: '', quote: '', rating: 5, photoUrl: '', showPhoto: true });
+    showToast(`Added review from "${newTest.name}". Click Save to persist!`);
+  };
+
+  const handleOpenEditTestimonial = (index, test) => {
+    setEditTestimonialData({
+      index,
+      id: test.id || `test_${index}`,
+      name: test.name || '',
+      role: test.role || '',
+      quote: test.quote || '',
+      rating: test.rating || 5,
+      photoUrl: test.photoUrl || '',
+      showPhoto: test.showPhoto !== false,
+    });
+    setEditTestimonialModalOpen(true);
+  };
+
+  const handleSaveEditTestimonial = (e) => {
+    if (e) e.preventDefault();
+    if (!editTestimonialData.name.trim()) return;
+    setCmsData((prev) => {
+      const tests = [...(prev.testimonials || [])];
+      if (editTestimonialData.index >= 0 && editTestimonialData.index < tests.length) {
+        tests[editTestimonialData.index] = {
+          ...tests[editTestimonialData.index],
+          name: editTestimonialData.name.trim(),
+          role: editTestimonialData.role.trim(),
+          quote: editTestimonialData.quote.trim(),
+          rating: Number(editTestimonialData.rating) || 5,
+          photoUrl: editTestimonialData.photoUrl.trim(),
+          showPhoto: Boolean(editTestimonialData.showPhoto),
+        };
+      }
+      return { ...prev, testimonials: tests };
+    });
+    setEditTestimonialModalOpen(false);
+    showToast(`Updated review from "${editTestimonialData.name}". Click Save to persist!`);
+  };
+
+  const handleToggleTestimonialVisibility = (index) => {
+    setCmsData((prev) => {
+      const tests = [...(prev.testimonials || [])];
+      tests[index] = { ...tests[index], isVisible: !tests[index].isVisible };
+      return { ...prev, testimonials: tests };
+    });
+  };
+
+  const handleDeleteTestimonial = (index) => {
+    if (!window.confirm('Are you sure you want to remove this testimonial?')) return;
+    setCmsData((prev) => {
+      const tests = [...(prev.testimonials || [])];
+      tests.splice(index, 1);
+      return { ...prev, testimonials: tests };
+    });
+    showToast('Testimonial removed. Click Save to persist!');
+  };
+
+  const handleMoveTestimonial = (index, direction) => {
+    setCmsData((prev) => {
+      const tests = [...(prev.testimonials || [])];
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= tests.length) return prev;
+      const temp = tests[index];
+      tests[index] = tests[targetIndex];
+      tests[targetIndex] = temp;
+      tests.forEach((t, idx) => {
+        t.displayOrder = idx + 1;
+      });
+      return { ...prev, testimonials: tests };
+    });
+  };
+
+  // Social Links helper
+  const updateSocialLink = (platform, field, value) => {
+    setCmsData((prev) => ({
+      ...prev,
+      socialLinks: {
+        ...(prev.socialLinks || {}),
+        [platform]: {
+          ...((prev.socialLinks && prev.socialLinks[platform]) || {}),
+          [field]: value,
+        },
+      },
+    }));
   };
 
   // Curations Handlers
@@ -1717,14 +1973,17 @@ export default function AdminDashboard() {
             {/* CMS Sub-Navigation Pills */}
             <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-[#795238]/15">
               {[
-                { id: 'sections', label: '👁️ Homepage Sections', desc: 'Toggle section visibility' },
-                { id: 'categories', label: '🏷️ Category Manager', desc: 'Add, hide, reorder categories' },
-                { id: 'metrics', label: '📊 Impact Metrics (20k Books...)', desc: 'Homepage statistics' },
-                { id: 'announcement', label: '📢 Announcement Banner', desc: 'Top global ribbon' },
-                { id: 'hero', label: '🚀 Hero Copy & Badges', desc: 'Main headline & trust' },
-                { id: 'bookcycle', label: '🔄 BookCycle & Founder', desc: 'Pricing & mission' },
-                { id: 'contact', label: '📞 Contact & Footer', desc: 'Address, phone, bio' },
-                { id: 'commerce', label: '🚚 Delivery & Fees', desc: 'Free delivery threshold' },
+                { id: 'sections', label: '👁️ Sections Visibility' },
+                { id: 'categories', label: '🏷️ Categories & Ranking' },
+                { id: 'facilities', label: '🏛️ Our Facilities' },
+                { id: 'testimonials', label: '💬 What People Say' },
+                { id: 'bookcycle', label: '🔄 Mission & Founder' },
+                { id: 'social', label: '🌐 Social & WhatsApp' },
+                { id: 'metrics', label: '📊 Impact Metrics' },
+                { id: 'announcement', label: '📢 Announcement Banner' },
+                { id: 'hero', label: '🚀 Hero Copy & Badges' },
+                { id: 'contact', label: '📞 Contact & Footer' },
+                { id: 'commerce', label: '🚚 Delivery & Fees' },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -1791,6 +2050,11 @@ export default function AdminDashboard() {
                         title: '🔄 BookCycle & Founder Story',
                         desc: 'BookCycle membership benefits, study notes facilities, and founder message.',
                       },
+                      {
+                        key: 'showTestimonials',
+                        title: '💬 What People Say (Testimonials)',
+                        desc: 'Student reviews, star ratings, and community endorsements showcase.',
+                      },
                     ].map((sec) => {
                       const isEnabled = cmsData?.sections?.[sec.key] !== false;
                       return (
@@ -1837,17 +2101,17 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* SUB-TAB: CATEGORY MANAGER */}
+            {/* SUB-TAB: CATEGORY MANAGER & RANKING */}
             {cmsSubTab === 'categories' && (
               <div className="space-y-6">
                 <div className="bg-white rounded-3xl border border-[#795238]/15 p-6 shadow-xs space-y-6">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <h3 className="text-base font-black text-[#795238]">
-                        Platform Categories Manager
+                        Platform Categories Manager & Ranking
                       </h3>
                       <p className="text-xs text-stone-600 mt-0.5">
-                        Add new categories, toggle visibility (show/hide), reorder display priority, or delete categories. All changes sync dynamically to Homepage Grid, Catalog filters, and Sell Book submission.
+                        Add categories, edit names, customize icons, assign priority rank order, or toggle visibility. Changes dynamically reflect across Homepage Grid, Catalog filters, and Sell Book forms.
                       </p>
                     </div>
                     <button
@@ -1866,7 +2130,7 @@ export default function AdminDashboard() {
                       return (
                         <div
                           key={cat.id || idx}
-                          className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                          className={`p-4 rounded-2xl border transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${
                             cat.isVisible !== false
                               ? 'bg-[#FAF6EF]/60 border-[#795238]/15'
                               : 'bg-stone-50 border-stone-200 opacity-60'
@@ -1895,12 +2159,28 @@ export default function AdminDashboard() {
                                 </span>
                               </div>
                               <p className="text-xs text-stone-500 truncate mt-0.5">
-                                {cat.description || 'General category'} • Icon: {cat.icon || 'BookOpen'} • Slot #{idx + 1}
+                                {cat.description || 'General category'} • Icon: {cat.icon || 'BookOpen'}
                               </p>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                          <div className="flex flex-wrap items-center gap-2 shrink-0 self-end lg:self-auto">
+                            {/* Priority Rank Order */}
+                            <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-stone-200">
+                              <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                                Rank:
+                              </span>
+                              <input
+                                type="number"
+                                min="1"
+                                value={cat.displayOrder ?? idx + 1}
+                                onChange={(e) => handleUpdateCategoryRank(idx, e.target.value)}
+                                className="w-12 text-center text-xs font-black text-[#795238] bg-transparent focus:outline-none"
+                                title="Set priority rank number"
+                              />
+                            </div>
+
+                            {/* Up / Down */}
                             <button
                               type="button"
                               onClick={() => handleMoveCategory(idx, -1)}
@@ -1908,7 +2188,7 @@ export default function AdminDashboard() {
                               title="Move Up"
                               className="p-2 rounded-xl bg-white hover:bg-stone-100 border border-stone-200 text-stone-600 disabled:opacity-30 cursor-pointer"
                             >
-                              <ArrowUp className="w-4 h-4" />
+                              <ArrowUp className="w-3.5 h-3.5" />
                             </button>
                             <button
                               type="button"
@@ -1917,8 +2197,20 @@ export default function AdminDashboard() {
                               title="Move Down"
                               className="p-2 rounded-xl bg-white hover:bg-stone-100 border border-stone-200 text-stone-600 disabled:opacity-30 cursor-pointer"
                             >
-                              <ArrowDown className="w-4 h-4" />
+                              <ArrowDown className="w-3.5 h-3.5" />
                             </button>
+
+                            {/* Edit Button */}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditCategory(idx, cat)}
+                              className="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-white hover:bg-[#FAF6EF] border border-[#795238]/30 text-[#795238] transition cursor-pointer"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                              <span>Edit</span>
+                            </button>
+
+                            {/* Toggle Show / Hide */}
                             <button
                               type="button"
                               onClick={() => handleToggleCategoryVisibility(idx)}
@@ -1940,13 +2232,15 @@ export default function AdminDashboard() {
                                 </>
                               )}
                             </button>
+
+                            {/* Delete Button */}
                             <button
                               type="button"
                               onClick={() => handleDeleteCategory(idx)}
                               className="p-2 rounded-xl bg-white hover:bg-rose-50 border border-rose-200 text-rose-600 cursor-pointer hover:bg-rose-100 transition"
                               title="Delete Category"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </div>
@@ -1957,99 +2251,108 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* SUB-TAB 1: METRICS */}
-            {cmsSubTab === 'metrics' && (
+            {/* SUB-TAB: OUR FACILITIES CMS */}
+            {cmsSubTab === 'facilities' && (
               <div className="space-y-6">
                 <div className="bg-white rounded-3xl border border-[#795238]/15 p-6 shadow-xs space-y-6">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <h3 className="text-base font-black text-[#795238]">
-                        Platform Impact Metrics Cards
+                        Our Facilities & Student Perks
                       </h3>
                       <p className="text-xs text-stone-600 mt-0.5">
-                        Add new cards, toggle visibility (show/hide), reorder priority, customize icons, or delete cards. All visible cards instantly render in the homepage Metrics Bar.
+                        Manage the student facilities cards shown in the BookCycle perks section (e.g. Free Study Notes, Doorstep Pickup, Instant Cash, Verified Quality).
                       </p>
                     </div>
                     <button
                       type="button"
-                      onClick={() => setNewMetricModalOpen(true)}
+                      onClick={() => setNewFacilityModalOpen(true)}
                       className="px-4 py-2.5 rounded-xl bg-[#795238] hover:bg-[#633f27] text-white text-xs font-bold flex items-center gap-2 transition shadow-xs cursor-pointer self-start sm:self-auto shrink-0"
                     >
                       <Plus className="w-4 h-4" />
-                      <span>Add New Metric Card</span>
+                      <span>Add Facility Card</span>
                     </button>
                   </div>
 
-                  <div className="space-y-4">
-                    {(cmsData?.metrics || []).map((m, idx) => {
-                      const IconComponent = ICON_MAP[m.icon] || BookOpen;
-                      const isVisible = m.isVisible !== false;
-
-                      return (
-                        <div
-                          key={m.id || idx}
-                          className={`p-5 rounded-2xl border transition-all space-y-4 ${
-                            isVisible
-                              ? 'bg-[#FAF6EF]/60 border-[#795238]/15 shadow-2xs'
-                              : 'bg-stone-50 border-stone-200 opacity-60'
-                          }`}
-                        >
-                          {/* Card Header */}
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#795238]/10 pb-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-white border border-[#795238]/20 flex items-center justify-center text-[#795238] shadow-2xs shrink-0">
+                  <div className="space-y-3">
+                    {(cmsData?.bookCycle?.facilities || []).length === 0 ? (
+                      <div className="p-8 text-center bg-[#FAF6EF]/40 rounded-2xl border border-dashed border-[#795238]/20 text-stone-500 text-xs">
+                        No custom facility cards added. Click "Add Facility Card" above to create one.
+                      </div>
+                    ) : (
+                      (cmsData?.bookCycle?.facilities || []).map((fac, idx) => {
+                        const IconComponent = ICON_MAP[fac.icon] || BookOpen;
+                        return (
+                          <div
+                            key={fac.id || idx}
+                            className={`p-4 rounded-2xl border transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${
+                              fac.isVisible !== false
+                                ? 'bg-[#FAF6EF]/60 border-[#795238]/15'
+                                : 'bg-stone-50 border-stone-200 opacity-60'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3.5 min-w-0">
+                              <div className="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-[#365314] shrink-0 shadow-2xs">
                                 <IconComponent className="w-5 h-5" />
                               </div>
-                              <div>
+                              <div className="min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-xs font-black text-[#795238] uppercase tracking-wider">
-                                    Slot #{idx + 1}
-                                  </span>
-                                  <span className="text-[10px] font-mono font-bold text-stone-500 bg-white px-2 py-0.5 rounded border border-stone-200">
-                                    ID: {m.id}
-                                  </span>
+                                  <h4 className="text-sm font-black text-stone-900 truncate">
+                                    {fac.title}
+                                  </h4>
                                   <span
-                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                      isVisible
+                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                                      fac.isVisible !== false
                                         ? 'bg-emerald-100 text-[#365314]'
                                         : 'bg-amber-100 text-amber-800'
                                     }`}
                                   >
-                                    {isVisible ? 'Visible' : 'Hidden'}
+                                    {fac.isVisible !== false ? 'Visible' : 'Hidden'}
                                   </span>
                                 </div>
+                                <p className="text-xs text-stone-600 mt-0.5">
+                                  {fac.desc}
+                                </p>
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                            <div className="flex items-center gap-2 shrink-0 self-end lg:self-auto">
                               <button
                                 type="button"
-                                onClick={() => handleMoveMetric(idx, -1)}
+                                onClick={() => handleMoveFacility(idx, -1)}
                                 disabled={idx === 0}
                                 title="Move Up"
-                                className="p-2 rounded-xl bg-white hover:bg-stone-100 border border-stone-200 text-stone-600 disabled:opacity-30 cursor-pointer transition"
+                                className="p-2 rounded-xl bg-white hover:bg-stone-100 border border-stone-200 text-stone-600 disabled:opacity-30 cursor-pointer"
                               >
-                                <ArrowUp className="w-4 h-4" />
+                                <ArrowUp className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleMoveMetric(idx, 1)}
-                                disabled={idx === (cmsData?.metrics?.length || 0) - 1}
+                                onClick={() => handleMoveFacility(idx, 1)}
+                                disabled={idx === (cmsData?.bookCycle?.facilities?.length || 0) - 1}
                                 title="Move Down"
-                                className="p-2 rounded-xl bg-white hover:bg-stone-100 border border-stone-200 text-stone-600 disabled:opacity-30 cursor-pointer transition"
+                                className="p-2 rounded-xl bg-white hover:bg-stone-100 border border-stone-200 text-stone-600 disabled:opacity-30 cursor-pointer"
                               >
-                                <ArrowDown className="w-4 h-4" />
+                                <ArrowDown className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleToggleMetricVisibility(idx)}
+                                onClick={() => handleOpenEditFacility(idx, fac)}
+                                className="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-white hover:bg-[#FAF6EF] border border-[#795238]/30 text-[#795238] transition cursor-pointer"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                                <span>Edit</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleToggleFacilityVisibility(idx)}
                                 className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition cursor-pointer ${
-                                  isVisible
+                                  fac.isVisible !== false
                                     ? 'bg-white hover:bg-amber-50 border-amber-200 text-amber-800'
                                     : 'bg-white hover:bg-emerald-50 border-emerald-200 text-[#365314]'
                                 }`}
                               >
-                                {isVisible ? (
+                                {fac.isVisible !== false ? (
                                   <>
                                     <EyeOff className="w-3.5 h-3.5" />
                                     <span>Hide</span>
@@ -2063,92 +2366,589 @@ export default function AdminDashboard() {
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleDeleteMetric(idx)}
+                                onClick={() => handleDeleteFacility(idx)}
                                 className="p-2 rounded-xl bg-white hover:bg-rose-50 border border-rose-200 text-rose-600 cursor-pointer hover:bg-rose-100 transition"
-                                title="Delete Metric Card"
+                                title="Delete Facility"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
-                          {/* Card Fields Grid */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div>
-                              <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                                Displayed Value *
-                              </label>
-                              <input
-                                type="text"
-                                value={m.value || ''}
-                                onChange={(e) => updateMetricItem(idx, 'value', e.target.value)}
-                                className="w-full px-3 py-2 text-sm font-black text-[#795238] bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
-                                placeholder="e.g. 20,000+"
+            {/* SUB-TAB: TESTIMONIALS (WHAT PEOPLE SAY) CMS */}
+            {cmsSubTab === 'testimonials' && (
+              <div className="space-y-6">
+                <div className="bg-white rounded-3xl border border-[#795238]/15 p-6 shadow-xs space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-base font-black text-[#795238]">
+                        Customer Reviews & Testimonials ("What People Say")
+                      </h3>
+                      <p className="text-xs text-stone-600 mt-0.5">
+                        Add student reviews, toggle photo inclusion (or use initials avatar), adjust star ratings, reorder, and hide/show testimonials on the homepage.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setNewTestimonialModalOpen(true)}
+                      className="px-4 py-2.5 rounded-xl bg-[#795238] hover:bg-[#633f27] text-white text-xs font-bold flex items-center gap-2 transition shadow-xs cursor-pointer self-start sm:self-auto shrink-0"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add New Review</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {(cmsData?.testimonials || []).length === 0 ? (
+                      <div className="p-8 text-center bg-[#FAF6EF]/40 rounded-2xl border border-dashed border-[#795238]/20 text-stone-500 text-xs">
+                        No testimonials added yet. Click "Add New Review" to add your first student review.
+                      </div>
+                    ) : (
+                      (cmsData?.testimonials || []).map((test, idx) => (
+                        <div
+                          key={test.id || idx}
+                          className={`p-4 rounded-2xl border transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${
+                            test.isVisible !== false
+                              ? 'bg-[#FAF6EF]/60 border-[#795238]/15'
+                              : 'bg-stone-50 border-stone-200 opacity-60'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3.5 min-w-0">
+                            {test.showPhoto && test.photoUrl ? (
+                              <img
+                                src={test.photoUrl}
+                                alt={test.name}
+                                className="w-12 h-12 rounded-full object-cover border-2 border-[#795238]/20 shrink-0 shadow-2xs"
                               />
-                            </div>
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-[#795238] text-white font-black text-sm flex items-center justify-center shrink-0 shadow-2xs">
+                                {(test.name || 'S')
+                                  .split(' ')
+                                  .map((n) => n[0])
+                                  .join('')
+                                  .substring(0, 2)
+                                  .toUpperCase()}
+                              </div>
+                            )}
 
-                            <div>
-                              <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                                Label Title *
-                              </label>
-                              <input
-                                type="text"
-                                value={m.label || ''}
-                                onChange={(e) => updateMetricItem(idx, 'label', e.target.value)}
-                                className="w-full px-3 py-2 text-xs font-bold text-stone-900 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
-                                placeholder="e.g. Books Available"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                                Subtext / Description
-                              </label>
-                              <input
-                                type="text"
-                                value={m.subtext || ''}
-                                onChange={(e) => updateMetricItem(idx, 'subtext', e.target.value)}
-                                className="w-full px-3 py-2 text-xs text-stone-600 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
-                                placeholder="e.g. In stock across Nepal"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                                Display Icon
-                              </label>
-                              <select
-                                value={m.icon || 'BookOpen'}
-                                onChange={(e) => updateMetricItem(idx, 'icon', e.target.value)}
-                                className="w-full px-3 py-2 text-xs font-bold text-stone-800 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238] cursor-pointer"
-                              >
-                                {[
-                                  { value: 'BookOpen', label: '📖 Book Open' },
-                                  { value: 'Users', label: '👥 Users / Students' },
-                                  { value: 'Recycle', label: '♻️ Recycle / Savings' },
-                                  { value: 'Heart', label: '❤️ Heart / Care' },
-                                  { value: 'Award', label: '🎖️ Award / Badge' },
-                                  { value: 'Trophy', label: '🏆 Trophy / Success' },
-                                  { value: 'Sparkles', label: '✨ Sparkles / Featured' },
-                                  { value: 'Shield', label: '🛡️ Shield / Verified' },
-                                  { value: 'TrendingUp', label: '📈 Trending Up' },
-                                  { value: 'DollarSign', label: '💰 Money / Savings' },
-                                  { value: 'Compass', label: '🧭 Compass / Hubs' },
-                                  { value: 'GraduationCap', label: '🎓 Graduation Cap' },
-                                  { value: 'School', label: '🏫 School' },
-                                  { value: 'Library', label: '📚 Library' },
-                                  { value: 'CheckCircle', label: '✅ Verified Quality' },
-                                ].map((opt) => (
-                                  <option key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                  </option>
-                                ))}
-                              </select>
+                            <div className="min-w-0 space-y-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className="text-sm font-black text-stone-900 truncate">
+                                  {test.name}
+                                </h4>
+                                <span className="text-[11px] font-medium text-stone-500">
+                                  • {test.role}
+                                </span>
+                                <div className="flex items-center text-amber-500">
+                                  {[...Array(test.rating || 5)].map((_, i) => (
+                                    <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                  ))}
+                                </div>
+                                <span
+                                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                                    test.isVisible !== false
+                                      ? 'bg-emerald-100 text-[#365314]'
+                                      : 'bg-amber-100 text-amber-800'
+                                  }`}
+                                >
+                                  {test.isVisible !== false ? 'Visible' : 'Hidden'}
+                                </span>
+                              </div>
+                              <p className="text-xs text-stone-600 italic leading-relaxed line-clamp-2">
+                                "{test.quote}"
+                              </p>
+                              <p className="text-[10px] text-stone-400">
+                                Photo: {test.showPhoto ? 'Enabled (Showing image)' : 'Disabled (Avatar initials)'}
+                              </p>
                             </div>
                           </div>
+
+                          <div className="flex items-center gap-2 shrink-0 self-end lg:self-auto">
+                            <button
+                              type="button"
+                              onClick={() => handleMoveTestimonial(idx, -1)}
+                              disabled={idx === 0}
+                              title="Move Up"
+                              className="p-2 rounded-xl bg-white hover:bg-stone-100 border border-stone-200 text-stone-600 disabled:opacity-30 cursor-pointer"
+                            >
+                              <ArrowUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleMoveTestimonial(idx, 1)}
+                              disabled={idx === (cmsData?.testimonials?.length || 0) - 1}
+                              title="Move Down"
+                              className="p-2 rounded-xl bg-white hover:bg-stone-100 border border-stone-200 text-stone-600 disabled:opacity-30 cursor-pointer"
+                            >
+                              <ArrowDown className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditTestimonial(idx, test)}
+                              className="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-white hover:bg-[#FAF6EF] border border-[#795238]/30 text-[#795238] transition cursor-pointer"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                              <span>Edit</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleTestimonialVisibility(idx)}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition cursor-pointer ${
+                                test.isVisible !== false
+                                  ? 'bg-white hover:bg-amber-50 border-amber-200 text-amber-800'
+                                  : 'bg-white hover:bg-emerald-50 border-emerald-200 text-[#365314]'
+                              }`}
+                            >
+                              {test.isVisible !== false ? (
+                                <>
+                                  <EyeOff className="w-3.5 h-3.5" />
+                                  <span>Hide</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Eye className="w-3.5 h-3.5" />
+                                  <span>Show</span>
+                                </>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteTestimonial(idx)}
+                              className="p-2 rounded-xl bg-white hover:bg-rose-50 border border-rose-200 text-rose-600 cursor-pointer hover:bg-rose-100 transition"
+                              title="Delete Testimonial"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
-                      );
-                    })}
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SUB-TAB: BOOKCYCLE & FOUNDER MISSION */}
+            {cmsSubTab === 'bookcycle' && (
+              <div className="space-y-6">
+                <div className="bg-white rounded-3xl border border-[#795238]/15 p-6 shadow-xs space-y-6">
+                  <div>
+                    <h3 className="text-base font-black text-[#795238]">
+                      Our Mission, Founder Story & BookCycle Membership
+                    </h3>
+                    <p className="text-xs text-stone-600 mt-0.5">
+                      Configure the mission headline, founder quote, founder photo toggle, subscription plan pricing, and feature list.
+                    </p>
+                  </div>
+
+                  {/* Mission Title & Subtitle */}
+                  <div className="p-4 rounded-2xl bg-[#FAF6EF]/60 border border-[#795238]/15 space-y-4">
+                    <span className="text-xs font-black text-[#795238] uppercase tracking-wider">
+                      Mission Section Headline & Subtitle
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                          Mission Title
+                        </label>
+                        <input
+                          type="text"
+                          value={cmsData?.bookCycle?.missionTitle || ''}
+                          onChange={(e) => updateCmsSection('bookCycle', 'missionTitle', e.target.value)}
+                          className="w-full px-3 py-2 text-xs font-bold text-stone-900 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                          placeholder="Our Mission & Story"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                          Mission Subtitle
+                        </label>
+                        <input
+                          type="text"
+                          value={cmsData?.bookCycle?.missionSubtitle || ''}
+                          onChange={(e) => updateCmsSection('bookCycle', 'missionSubtitle', e.target.value)}
+                          className="w-full px-3 py-2 text-xs font-bold text-stone-900 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                          placeholder="Circulating Knowledge, Empowering Students"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Founder Story row with Photo toggle */}
+                  <div className="p-4 rounded-2xl bg-[#FAF6EF]/60 border border-[#795238]/15 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-[#795238] uppercase tracking-wider">
+                        Founder Mission Quote & Profile
+                      </span>
+                      <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1 rounded-xl border border-stone-200">
+                        <input
+                          type="checkbox"
+                          checked={cmsData?.bookCycle?.founder?.showImage !== false}
+                          onChange={(e) => updateFounderField('showImage', e.target.checked)}
+                          className="w-4 h-4 accent-[#795238] rounded cursor-pointer"
+                        />
+                        <span className="text-xs font-bold text-stone-800">Show Founder Photo</span>
+                      </label>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                          Founder Name
+                        </label>
+                        <input
+                          type="text"
+                          value={cmsData?.bookCycle?.founder?.name || ''}
+                          onChange={(e) => updateFounderField('name', e.target.value)}
+                          className="w-full px-3 py-2 text-xs font-bold text-stone-900 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                          placeholder="Shraddha"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                          Role / Title
+                        </label>
+                        <input
+                          type="text"
+                          value={cmsData?.bookCycle?.founder?.role || ''}
+                          onChange={(e) => updateFounderField('role', e.target.value)}
+                          className="w-full px-3 py-2 text-xs font-bold text-stone-900 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                          placeholder="Founder & Community Lead"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                          Avatar Image URL (Optional if Show Photo is enabled)
+                        </label>
+                        <input
+                          type="text"
+                          value={cmsData?.bookCycle?.founder?.imageUrl || ''}
+                          onChange={(e) => updateFounderField('imageUrl', e.target.value)}
+                          className="w-full px-3 py-2 text-xs text-stone-800 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                          placeholder="https://images.unsplash.com/photo-..."
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                          Founder Mission Quote / Story
+                        </label>
+                        <textarea
+                          rows={3}
+                          value={cmsData?.bookCycle?.founder?.quote || ''}
+                          onChange={(e) => updateFounderField('quote', e.target.value)}
+                          className="w-full px-3 py-2 text-xs text-stone-800 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                          placeholder="Hi, I'm Shraddha! I founded SMARTKITAB because..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Pricing row */}
+                  <div className="p-4 rounded-2xl bg-[#FAF6EF]/60 border border-[#795238]/15 space-y-4">
+                    <span className="text-xs font-black text-[#795238] uppercase tracking-wider">
+                      BookCycle Subscription Pricing
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                          Monthly Fee (Rs.)
+                        </label>
+                        <input
+                          type="number"
+                          value={cmsData?.bookCycle?.membershipPrice ?? 200}
+                          onChange={(e) => updateCmsSection('bookCycle', 'membershipPrice', Number(e.target.value))}
+                          className="w-full px-3 py-2 text-sm font-black text-[#795238] bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                          Billing Cycle Period
+                        </label>
+                        <input
+                          type="text"
+                          value={cmsData?.bookCycle?.membershipPeriod || '/ month'}
+                          onChange={(e) => updateCmsSection('bookCycle', 'membershipPeriod', e.target.value)}
+                          className="w-full px-3 py-2 text-xs font-bold text-stone-900 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                        />
+                      </div>
+                      <div className="sm:col-span-2 md:col-span-1">
+                        <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                          BookCycle Tagline
+                        </label>
+                        <input
+                          type="text"
+                          value={cmsData?.bookCycle?.tagline || ''}
+                          onChange={(e) => updateCmsSection('bookCycle', 'tagline', e.target.value)}
+                          className="w-full px-3 py-2 text-xs text-stone-800 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                          placeholder="Read as many books as you like..."
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 pt-2">
+                      <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider">
+                        Subscription Features (4 Highlights)
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {[0, 1, 2, 3].map((idx) => (
+                          <input
+                            key={idx}
+                            type="text"
+                            value={cmsData?.bookCycle?.features?.[idx] || ''}
+                            onChange={(e) => updateBookCycleFeature(idx, e.target.value)}
+                            className="px-3 py-2 text-xs font-medium text-stone-800 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                            placeholder={`Feature #${idx + 1}`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SUB-TAB: SOCIAL MEDIA & WHATSAPP LINKS CMS */}
+            {cmsSubTab === 'social' && (
+              <div className="space-y-6">
+                <div className="bg-white rounded-3xl border border-[#795238]/15 p-6 shadow-xs space-y-6">
+                  <div>
+                    <h3 className="text-base font-black text-[#795238]">
+                      Social Media & WhatsApp Links Manager
+                    </h3>
+                    <p className="text-xs text-stone-600 mt-0.5">
+                      Configure your direct social channels and WhatsApp chat hotline. Enable or disable individual icons to show or hide them across the website footer and contact channels.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {/* Facebook */}
+                    <div className="p-5 rounded-2xl bg-[#FAF6EF]/60 border border-[#795238]/15 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-[#795238] uppercase tracking-wider flex items-center gap-2">
+                          <Globe className="w-4 h-4 text-blue-600" />
+                          <span>Facebook Page</span>
+                        </span>
+                        <label className="flex items-center gap-1.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={cmsData?.socialLinks?.facebook?.enabled !== false}
+                            onChange={(e) => updateSocialLink('facebook', 'enabled', e.target.checked)}
+                            className="w-4 h-4 accent-[#795238] rounded cursor-pointer"
+                          />
+                          <span className="text-xs font-bold text-stone-700">Enable</span>
+                        </label>
+                      </div>
+                      <input
+                        type="url"
+                        value={cmsData?.socialLinks?.facebook?.url || ''}
+                        onChange={(e) => updateSocialLink('facebook', 'url', e.target.value)}
+                        placeholder="https://facebook.com/smartkitab"
+                        className="w-full px-3 py-2 text-xs bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                      />
+                    </div>
+
+                    {/* Instagram */}
+                    <div className="p-5 rounded-2xl bg-[#FAF6EF]/60 border border-[#795238]/15 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-[#795238] uppercase tracking-wider flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-pink-600" />
+                          <span>Instagram Profile</span>
+                        </span>
+                        <label className="flex items-center gap-1.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={cmsData?.socialLinks?.instagram?.enabled !== false}
+                            onChange={(e) => updateSocialLink('instagram', 'enabled', e.target.checked)}
+                            className="w-4 h-4 accent-[#795238] rounded cursor-pointer"
+                          />
+                          <span className="text-xs font-bold text-stone-700">Enable</span>
+                        </label>
+                      </div>
+                      <input
+                        type="url"
+                        value={cmsData?.socialLinks?.instagram?.url || ''}
+                        onChange={(e) => updateSocialLink('instagram', 'url', e.target.value)}
+                        placeholder="https://instagram.com/smartkitab.np"
+                        className="w-full px-3 py-2 text-xs bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                      />
+                    </div>
+
+                    {/* TikTok */}
+                    <div className="p-5 rounded-2xl bg-[#FAF6EF]/60 border border-[#795238]/15 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-[#795238] uppercase tracking-wider flex items-center gap-2">
+                          <Flame className="w-4 h-4 text-stone-900" />
+                          <span>TikTok Channel</span>
+                        </span>
+                        <label className="flex items-center gap-1.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={cmsData?.socialLinks?.tiktok?.enabled !== false}
+                            onChange={(e) => updateSocialLink('tiktok', 'enabled', e.target.checked)}
+                            className="w-4 h-4 accent-[#795238] rounded cursor-pointer"
+                          />
+                          <span className="text-xs font-bold text-stone-700">Enable</span>
+                        </label>
+                      </div>
+                      <input
+                        type="url"
+                        value={cmsData?.socialLinks?.tiktok?.url || ''}
+                        onChange={(e) => updateSocialLink('tiktok', 'url', e.target.value)}
+                        placeholder="https://tiktok.com/@smartkitab"
+                        className="w-full px-3 py-2 text-xs bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                      />
+                    </div>
+
+                    {/* YouTube */}
+                    <div className="p-5 rounded-2xl bg-[#FAF6EF]/60 border border-[#795238]/15 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-[#795238] uppercase tracking-wider flex items-center gap-2">
+                          <Share2 className="w-4 h-4 text-red-600" />
+                          <span>YouTube Channel</span>
+                        </span>
+                        <label className="flex items-center gap-1.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={cmsData?.socialLinks?.youtube?.enabled !== false}
+                            onChange={(e) => updateSocialLink('youtube', 'enabled', e.target.checked)}
+                            className="w-4 h-4 accent-[#795238] rounded cursor-pointer"
+                          />
+                          <span className="text-xs font-bold text-stone-700">Enable</span>
+                        </label>
+                      </div>
+                      <input
+                        type="url"
+                        value={cmsData?.socialLinks?.youtube?.url || ''}
+                        onChange={(e) => updateSocialLink('youtube', 'url', e.target.value)}
+                        placeholder="https://youtube.com/@smartkitab"
+                        className="w-full px-3 py-2 text-xs bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                      />
+                    </div>
+
+                    {/* WhatsApp */}
+                    <div className="p-5 rounded-2xl bg-[#FAF6EF]/60 border border-[#795238]/15 space-y-3 md:col-span-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-[#795238] uppercase tracking-wider flex items-center gap-2">
+                          <Phone className="w-4 h-4 text-emerald-600" />
+                          <span>WhatsApp Direct Chat & Hotline</span>
+                        </span>
+                        <label className="flex items-center gap-1.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={cmsData?.socialLinks?.whatsapp?.enabled !== false}
+                            onChange={(e) => updateSocialLink('whatsapp', 'enabled', e.target.checked)}
+                            className="w-4 h-4 accent-[#795238] rounded cursor-pointer"
+                          />
+                          <span className="text-xs font-bold text-stone-700">Enable</span>
+                        </label>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] font-bold text-stone-600 mb-1">
+                            WhatsApp Number (with country code)
+                          </label>
+                          <input
+                            type="text"
+                            value={cmsData?.socialLinks?.whatsapp?.phone || ''}
+                            onChange={(e) => updateSocialLink('whatsapp', 'phone', e.target.value)}
+                            placeholder="+977 9800000000"
+                            className="w-full px-3 py-2 text-xs bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-stone-600 mb-1">
+                            Direct Link URL (Optional Override)
+                          </label>
+                          <input
+                            type="url"
+                            value={cmsData?.socialLinks?.whatsapp?.url || ''}
+                            onChange={(e) => updateSocialLink('whatsapp', 'url', e.target.value)}
+                            placeholder="https://wa.me/9779800000000"
+                            className="w-full px-3 py-2 text-xs bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SUB-TAB 1: METRICS */}
+            {cmsSubTab === 'metrics' && (
+              <div className="space-y-6">
+                <div className="bg-white rounded-3xl border border-[#795238]/15 p-6 shadow-xs space-y-6">
+                  <div>
+                    <h3 className="text-base font-black text-[#795238]">
+                      Platform Impact Metrics
+                    </h3>
+                    <p className="text-xs text-stone-600 mt-0.5">
+                      Configure the 4 vital platform statistics shown right below the hero on the homepage. Change numbers (e.g. 20,000+ books, 12,000+ students served) and titles at any time.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {(cmsData?.metrics || []).map((m, idx) => (
+                      <div
+                        key={m.id || idx}
+                        className="p-5 rounded-2xl bg-[#FAF6EF]/70 border border-[#795238]/15 space-y-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black text-[#795238] uppercase tracking-wider">
+                            Metric #{idx + 1} ({m.id})
+                          </span>
+                          <span className="text-[11px] font-bold text-stone-500 bg-white px-2 py-0.5 rounded-full border border-stone-200">
+                            Slot {idx + 1} of 4
+                          </span>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                            Displayed Value (e.g. 20,000+ or Rs. 15 Lakhs+)
+                          </label>
+                          <input
+                            type="text"
+                            value={m.value || ''}
+                            onChange={(e) => updateMetricItem(idx, 'value', e.target.value)}
+                            className="w-full px-3 py-2 text-sm font-black text-[#795238] bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                            placeholder="e.g. 20,000+"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                            Label Title (e.g. Books Available)
+                          </label>
+                          <input
+                            type="text"
+                            value={m.label || ''}
+                            onChange={(e) => updateMetricItem(idx, 'label', e.target.value)}
+                            className="w-full px-3 py-2 text-xs font-bold text-stone-900 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                            placeholder="e.g. Books Available"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                            Subtext / Context Description
+                          </label>
+                          <input
+                            type="text"
+                            value={m.subtext || ''}
+                            onChange={(e) => updateMetricItem(idx, 'subtext', e.target.value)}
+                            className="w-full px-3 py-2 text-xs text-stone-600 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                            placeholder="e.g. Curriculum & fiction in stock"
+                          />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -2157,7 +2957,7 @@ export default function AdminDashboard() {
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold uppercase tracking-wider text-[#795238] flex items-center gap-1.5">
                       <Eye className="w-4 h-4" />
-                      <span>Live Storefront Preview (Visible Cards Only)</span>
+                      <span>Live Storefront Preview</span>
                     </span>
                     <span className="text-[11px] font-medium text-stone-500">
                       Renders in MetricsBar on Homepage
@@ -2165,46 +2965,21 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="bg-white rounded-2xl p-6 border border-[#795238]/15 shadow-sm">
-                    {(() => {
-                      const visibleMetrics = (cmsData?.metrics || []).filter(
-                        (m) => m.isVisible !== false
-                      );
-                      if (visibleMetrics.length === 0) {
-                        return (
-                          <p className="text-xs text-stone-400 text-center py-4">
-                            All metric cards are currently hidden. The section will not render on the homepage.
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 divide-y lg:divide-y-0 lg:divide-x divide-[#795238]/10 text-center">
+                      {(cmsData?.metrics || []).map((m, idx) => (
+                        <div key={idx} className="pt-4 lg:pt-0 lg:px-4">
+                          <p className="text-2xl sm:text-3xl font-black text-[#795238] tracking-tight">
+                            {m.value || '—'}
                           </p>
-                        );
-                      }
-                      return (
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center">
-                          {visibleMetrics.map((m, idx) => {
-                            const IconC = ICON_MAP[m.icon] || BookOpen;
-                            return (
-                              <div
-                                key={idx}
-                                className="p-4 rounded-xl bg-[#FAF6EF]/50 border border-[#795238]/10 flex flex-col items-center justify-between gap-2"
-                              >
-                                <div className="w-9 h-9 rounded-xl bg-[#795238]/10 flex items-center justify-center text-[#795238]">
-                                  <IconC className="w-5 h-5" />
-                                </div>
-                                <div>
-                                  <p className="text-xl sm:text-2xl font-black text-[#795238] tracking-tight">
-                                    {m.value || '—'}
-                                  </p>
-                                  <p className="text-xs font-bold text-stone-900 mt-0.5">
-                                    {m.label || '—'}
-                                  </p>
-                                  <p className="text-[11px] text-stone-500 line-clamp-2 mt-0.5">
-                                    {m.subtext || '—'}
-                                  </p>
-                                </div>
-                              </div>
-                            );
-                          })}
+                          <p className="text-xs sm:text-sm font-bold text-stone-900 mt-1">
+                            {m.label || '—'}
+                          </p>
+                          <p className="text-[11px] text-stone-500 mt-0.5">
+                            {m.subtext || '—'}
+                          </p>
                         </div>
-                      );
-                    })()}
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -3848,50 +4623,56 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* ================= ADD NEW METRIC MODAL ================= */}
-      {newMetricModalOpen && (
-
+      {/* ================= EDIT CATEGORY MODAL ================= */}
+      {editCatModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl border border-[#795238]/20 max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden">
             <button
-              onClick={() => setNewMetricModalOpen(false)}
+              onClick={() => setEditCatModalOpen(false)}
               className="absolute top-5 right-5 p-1.5 rounded-full hover:bg-stone-100 text-stone-500 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="flex items-center gap-2 text-xs font-bold text-[#795238] bg-[#FAF6EF] px-3 py-1 rounded-full w-fit">
-              <TrendingUp className="w-4 h-4 text-[#795238]" />
-              <span>Impact Metrics Manager</span>
+              <Edit3 className="w-4 h-4 text-[#795238]" />
+              <span>Edit Category & Ranking</span>
             </div>
 
             <div>
               <h3 className="text-xl font-black text-stone-900">
-                Add New Impact Metric Card
+                Edit Category Details
               </h3>
               <p className="text-xs text-stone-600 mt-0.5">
-                This statistic card will instantly appear on the homepage impact statistics bar.
+                Update category display name, descriptive subtext, custom icon, or display priority rank.
               </p>
             </div>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleAddMetric();
-              }}
-              className="space-y-4"
-            >
+            <form onSubmit={handleSaveEditCategory} className="space-y-4">
               <div>
                 <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Displayed Number / Value *
+                  Category Name *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. 25,000+ or Rs. 20 Lakhs+"
-                  value={newMetricData.value}
+                  value={editCatData.name}
                   onChange={(e) =>
-                    setNewMetricData({ ...newMetricData, value: e.target.value })
+                    setEditCatData({ ...editCatData, name: e.target.value })
+                  }
+                  className="w-full px-3 py-2 text-sm font-bold text-stone-900 bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Subtitle / Description
+                </label>
+                <input
+                  type="text"
+                  value={editCatData.description}
+                  onChange={(e) =>
+                    setEditCatData({ ...editCatData, description: e.target.value })
                   }
                   className="w-full px-3 py-2 text-sm bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
                 />
@@ -3899,32 +4680,16 @@ export default function AdminDashboard() {
 
               <div>
                 <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Metric Title / Label *
+                  Display Order / Rank Priority
                 </label>
                 <input
-                  type="text"
-                  required
-                  placeholder="e.g. Books Recycled or Happy Students"
-                  value={newMetricData.label}
+                  type="number"
+                  min="1"
+                  value={editCatData.displayOrder}
                   onChange={(e) =>
-                    setNewMetricData({ ...newMetricData, label: e.target.value })
+                    setEditCatData({ ...editCatData, displayOrder: e.target.value })
                   }
-                  className="w-full px-3 py-2 text-sm bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Subtext / Description
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Across universities and colleges"
-                  value={newMetricData.subtext}
-                  onChange={(e) =>
-                    setNewMetricData({ ...newMetricData, subtext: e.target.value })
-                  }
-                  className="w-full px-3 py-2 text-sm bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                  className="w-full px-3 py-2 text-sm font-black text-[#795238] bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
                 />
               </div>
 
@@ -3932,37 +4697,38 @@ export default function AdminDashboard() {
                 <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-2">
                   Select Display Icon
                 </label>
-                <div className="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto p-1 border border-stone-200 rounded-xl bg-stone-50/50">
+                <div className="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto pr-1">
                   {[
-                    { name: 'BookOpen', label: 'Books' },
-                    { name: 'Users', label: 'Users' },
-                    { name: 'Recycle', label: 'Recycle' },
-                    { name: 'Heart', label: 'Heart' },
-                    { name: 'Award', label: 'Award' },
-                    { name: 'Trophy', label: 'Trophy' },
-                    { name: 'Sparkles', label: 'Sparkles' },
-                    { name: 'Shield', label: 'Shield' },
-                    { name: 'TrendingUp', label: 'Trending' },
-                    { name: 'DollarSign', label: 'Savings' },
-                    { name: 'Compass', label: 'Hubs' },
+                    { name: 'BookOpen', label: 'Book' },
+                    { name: 'Bookmark', label: 'Bookmark' },
+                    { name: 'Compass', label: 'Compass' },
+                    { name: 'Stethoscope', label: 'Medical' },
                     { name: 'GraduationCap', label: 'Cap' },
                     { name: 'School', label: 'School' },
                     { name: 'Library', label: 'Library' },
-                    { name: 'CheckCircle', label: 'Verified' },
+                    { name: 'Layers', label: 'Layers' },
+                    { name: 'Languages', label: 'Language' },
+                    { name: 'Sparkles', label: 'Sparkles' },
+                    { name: 'Flame', label: 'Flame' },
+                    { name: 'Globe', label: 'Globe' },
+                    { name: 'Award', label: 'Award' },
+                    { name: 'Shield', label: 'Shield' },
+                    { name: 'TrendingUp', label: 'Trending' },
+                    { name: 'Heart', label: 'Heart' },
                   ].map((ic) => {
                     const IconC = ICON_MAP[ic.name] || BookOpen;
-                    const isSelected = newMetricData.icon === ic.name;
+                    const isSelected = editCatData.icon === ic.name;
                     return (
                       <button
                         key={ic.name}
                         type="button"
                         onClick={() =>
-                          setNewMetricData({ ...newMetricData, icon: ic.name })
+                          setEditCatData({ ...editCatData, icon: ic.name })
                         }
                         className={`flex flex-col items-center gap-1 p-2 rounded-xl border text-center transition cursor-pointer ${
                           isSelected
                             ? 'bg-[#795238] text-white border-[#795238] shadow-xs'
-                            : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-100'
+                            : 'bg-[#FAF6EF]/40 text-stone-700 border-stone-200 hover:bg-stone-100'
                         }`}
                       >
                         <IconC className="w-5 h-5" />
@@ -3978,7 +4744,426 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-end gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setNewMetricModalOpen(false)}
+                  onClick={() => setEditCatModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs cursor-pointer transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-[#795238] hover:bg-[#633f27] text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition shadow-md"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Update Category</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= ADD NEW FACILITY MODAL ================= */}
+      {newFacilityModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl border border-[#795238]/20 max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden">
+            <button
+              onClick={() => setNewFacilityModalOpen(false)}
+              className="absolute top-5 right-5 p-1.5 rounded-full hover:bg-stone-100 text-stone-500 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 text-xs font-bold text-[#365314] bg-emerald-50 px-3 py-1 rounded-full w-fit">
+              <Plus className="w-4 h-4 text-[#365314]" />
+              <span>Our Facilities CMS</span>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-black text-stone-900">
+                Add Facility Card
+              </h3>
+              <p className="text-xs text-stone-600 mt-0.5">
+                Add a new student facility card to the BookCycle perks section.
+              </p>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAddFacility();
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Facility Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Free Study Notes & Guides"
+                  value={newFacilityData.title}
+                  onChange={(e) =>
+                    setNewFacilityData({ ...newFacilityData, title: e.target.value })
+                  }
+                  className="w-full px-3 py-2 text-sm bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Description / Benefit *
+                </label>
+                <textarea
+                  rows={2}
+                  required
+                  placeholder="e.g. Access digital curriculum notes, formulas, and past papers curated by toppers."
+                  value={newFacilityData.desc}
+                  onChange={(e) =>
+                    setNewFacilityData({ ...newFacilityData, desc: e.target.value })
+                  }
+                  className="w-full px-3 py-2 text-xs bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-2">
+                  Select Facility Icon
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { name: 'BookOpen', label: 'Book' },
+                    { name: 'Library', label: 'Library' },
+                    { name: 'Truck', label: 'Delivery' },
+                    { name: 'ShieldCheck', label: 'Shield' },
+                    { name: 'Recycle', label: 'Circular' },
+                    { name: 'DollarSign', label: 'Instant Cash' },
+                    { name: 'Sparkles', label: 'Perks' },
+                    { name: 'HeartHandshake', label: 'Support' },
+                  ].map((ic) => {
+                    const IconC = ICON_MAP[ic.name] || BookOpen;
+                    const isSelected = newFacilityData.icon === ic.name;
+                    return (
+                      <button
+                        key={ic.name}
+                        type="button"
+                        onClick={() =>
+                          setNewFacilityData({ ...newFacilityData, icon: ic.name })
+                        }
+                        className={`flex flex-col items-center gap-1 p-2 rounded-xl border text-center transition cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#365314] text-white border-[#365314] shadow-xs'
+                            : 'bg-[#FAF6EF]/40 text-stone-700 border-stone-200 hover:bg-stone-100'
+                        }`}
+                      >
+                        <IconC className="w-5 h-5" />
+                        <span className="text-[10px] font-bold truncate w-full">
+                          {ic.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setNewFacilityModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs cursor-pointer transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-[#365314] hover:bg-[#283e0e] text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition shadow-md"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Facility Card</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= EDIT FACILITY MODAL ================= */}
+      {editFacilityModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl border border-[#795238]/20 max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden">
+            <button
+              onClick={() => setEditFacilityModalOpen(false)}
+              className="absolute top-5 right-5 p-1.5 rounded-full hover:bg-stone-100 text-stone-500 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 text-xs font-bold text-[#365314] bg-emerald-50 px-3 py-1 rounded-full w-fit">
+              <Edit3 className="w-4 h-4 text-[#365314]" />
+              <span>Edit Facility Card</span>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-black text-stone-900">
+                Edit Facility Details
+              </h3>
+              <p className="text-xs text-stone-600 mt-0.5">
+                Update the facility title, description narrative, and icon.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveEditFacility} className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Facility Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editFacilityData.title}
+                  onChange={(e) =>
+                    setEditFacilityData({ ...editFacilityData, title: e.target.value })
+                  }
+                  className="w-full px-3 py-2 text-sm font-bold text-stone-900 bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Description / Benefit *
+                </label>
+                <textarea
+                  rows={2}
+                  required
+                  value={editFacilityData.desc}
+                  onChange={(e) =>
+                    setEditFacilityData({ ...editFacilityData, desc: e.target.value })
+                  }
+                  className="w-full px-3 py-2 text-xs bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-2">
+                  Select Facility Icon
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { name: 'BookOpen', label: 'Book' },
+                    { name: 'Library', label: 'Library' },
+                    { name: 'Truck', label: 'Delivery' },
+                    { name: 'ShieldCheck', label: 'Shield' },
+                    { name: 'Recycle', label: 'Circular' },
+                    { name: 'DollarSign', label: 'Instant Cash' },
+                    { name: 'Sparkles', label: 'Perks' },
+                    { name: 'HeartHandshake', label: 'Support' },
+                  ].map((ic) => {
+                    const IconC = ICON_MAP[ic.name] || BookOpen;
+                    const isSelected = editFacilityData.icon === ic.name;
+                    return (
+                      <button
+                        key={ic.name}
+                        type="button"
+                        onClick={() =>
+                          setEditFacilityData({ ...editFacilityData, icon: ic.name })
+                        }
+                        className={`flex flex-col items-center gap-1 p-2 rounded-xl border text-center transition cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#365314] text-white border-[#365314] shadow-xs'
+                            : 'bg-[#FAF6EF]/40 text-stone-700 border-stone-200 hover:bg-stone-100'
+                        }`}
+                      >
+                        <IconC className="w-5 h-5" />
+                        <span className="text-[10px] font-bold truncate w-full">
+                          {ic.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditFacilityModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs cursor-pointer transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-[#365314] hover:bg-[#283e0e] text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition shadow-md"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Update Facility</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= ADD NEW TESTIMONIAL MODAL ================= */}
+      {newTestimonialModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl border border-[#795238]/20 max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setNewTestimonialModalOpen(false)}
+              className="absolute top-5 right-5 p-1.5 rounded-full hover:bg-stone-100 text-stone-500 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 text-xs font-bold text-[#795238] bg-[#FAF6EF] px-3 py-1 rounded-full w-fit">
+              <MessageSquareHeart className="w-4 h-4 text-[#795238]" />
+              <span>Student Testimonials CMS</span>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-black text-stone-900">
+                Add Customer Review / Testimonial
+              </h3>
+              <p className="text-xs text-stone-600 mt-0.5">
+                Highlight honest student feedback with star ratings, quotes, and optional photos.
+              </p>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAddTestimonial();
+              }}
+              className="space-y-4"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                    Student Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Ronit Sharma"
+                    value={newTestimonialData.name}
+                    onChange={(e) =>
+                      setNewTestimonialData({ ...newTestimonialData, name: e.target.value })
+                    }
+                    className="w-full px-3 py-2 text-sm bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                    Role / University / Faculty
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. IOE Pulchowk, Computer Eng."
+                    value={newTestimonialData.role}
+                    onChange={(e) =>
+                      setNewTestimonialData({ ...newTestimonialData, role: e.target.value })
+                    }
+                    className="w-full px-3 py-2 text-sm bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Star Rating (1 - 5)
+                </label>
+                <div className="flex items-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() =>
+                        setNewTestimonialData({ ...newTestimonialData, rating: star })
+                      }
+                      className="p-1.5 rounded-lg hover:bg-amber-50 cursor-pointer transition"
+                    >
+                      <Star
+                        className={`w-6 h-6 ${
+                          star <= newTestimonialData.rating
+                            ? 'fill-amber-400 text-amber-400'
+                            : 'text-stone-300'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                  <span className="text-xs font-bold text-stone-600 ml-2">
+                    {newTestimonialData.rating} of 5 Stars
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Student Review / Quote *
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="e.g. Saved over Rs. 4,000 on my semester textbooks! Delivered right to my hostel in 24 hours."
+                  value={newTestimonialData.quote}
+                  onChange={(e) =>
+                    setNewTestimonialData({ ...newTestimonialData, quote: e.target.value })
+                  }
+                  className="w-full px-3 py-2 text-xs bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                />
+              </div>
+
+              <div className="p-4 rounded-2xl bg-[#FAF6EF] border border-[#795238]/15 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#795238] uppercase tracking-wider">
+                    Photo Display Settings
+                  </span>
+                  <label className="flex items-center gap-1.5 cursor-pointer bg-white px-2.5 py-1 rounded-lg border border-stone-200">
+                    <input
+                      type="checkbox"
+                      checked={newTestimonialData.showPhoto}
+                      onChange={(e) =>
+                        setNewTestimonialData({
+                          ...newTestimonialData,
+                          showPhoto: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 accent-[#795238] rounded cursor-pointer"
+                    />
+                    <span className="text-xs font-bold text-stone-800">Include Photo</span>
+                  </label>
+                </div>
+
+                {newTestimonialData.showPhoto ? (
+                  <div>
+                    <label className="block text-[10px] font-bold text-stone-600 mb-1">
+                      Photo Image URL (Optional)
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://images.unsplash.com/photo-..."
+                      value={newTestimonialData.photoUrl}
+                      onChange={(e) =>
+                        setNewTestimonialData({
+                          ...newTestimonialData,
+                          photoUrl: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 text-xs bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-stone-500 italic">
+                    Photo disabled: Will render a sleek circular initials avatar ({newTestimonialData.name ? newTestimonialData.name.substring(0, 2).toUpperCase() : 'SK'}).
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setNewTestimonialModalOpen(false)}
                   className="px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs cursor-pointer transition"
                 >
                   Cancel
@@ -3988,7 +5173,175 @@ export default function AdminDashboard() {
                   className="px-5 py-2 rounded-xl bg-[#795238] hover:bg-[#633f27] text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition shadow-md"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Add Metric Card</span>
+                  <span>Add Review</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= EDIT TESTIMONIAL MODAL ================= */}
+      {editTestimonialModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl border border-[#795238]/20 max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setEditTestimonialModalOpen(false)}
+              className="absolute top-5 right-5 p-1.5 rounded-full hover:bg-stone-100 text-stone-500 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 text-xs font-bold text-[#795238] bg-[#FAF6EF] px-3 py-1 rounded-full w-fit">
+              <Edit3 className="w-4 h-4 text-[#795238]" />
+              <span>Edit Customer Review</span>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-black text-stone-900">
+                Edit Testimonial Details
+              </h3>
+              <p className="text-xs text-stone-600 mt-0.5">
+                Update reviewer name, star rating, feedback quote, or photo toggle settings.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveEditTestimonial} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                    Student Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editTestimonialData.name}
+                    onChange={(e) =>
+                      setEditTestimonialData({ ...editTestimonialData, name: e.target.value })
+                    }
+                    className="w-full px-3 py-2 text-sm font-bold text-stone-900 bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                    Role / University / Faculty
+                  </label>
+                  <input
+                    type="text"
+                    value={editTestimonialData.role}
+                    onChange={(e) =>
+                      setEditTestimonialData({ ...editTestimonialData, role: e.target.value })
+                    }
+                    className="w-full px-3 py-2 text-sm bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Star Rating (1 - 5)
+                </label>
+                <div className="flex items-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() =>
+                        setEditTestimonialData({ ...editTestimonialData, rating: star })
+                      }
+                      className="p-1.5 rounded-lg hover:bg-amber-50 cursor-pointer transition"
+                    >
+                      <Star
+                        className={`w-6 h-6 ${
+                          star <= editTestimonialData.rating
+                            ? 'fill-amber-400 text-amber-400'
+                            : 'text-stone-300'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                  <span className="text-xs font-bold text-stone-600 ml-2">
+                    {editTestimonialData.rating} of 5 Stars
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Student Review / Quote *
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  value={editTestimonialData.quote}
+                  onChange={(e) =>
+                    setEditTestimonialData({ ...editTestimonialData, quote: e.target.value })
+                  }
+                  className="w-full px-3 py-2 text-xs bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                />
+              </div>
+
+              <div className="p-4 rounded-2xl bg-[#FAF6EF] border border-[#795238]/15 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#795238] uppercase tracking-wider">
+                    Photo Display Settings
+                  </span>
+                  <label className="flex items-center gap-1.5 cursor-pointer bg-white px-2.5 py-1 rounded-lg border border-stone-200">
+                    <input
+                      type="checkbox"
+                      checked={editTestimonialData.showPhoto}
+                      onChange={(e) =>
+                        setEditTestimonialData({
+                          ...editTestimonialData,
+                          showPhoto: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 accent-[#795238] rounded cursor-pointer"
+                    />
+                    <span className="text-xs font-bold text-stone-800">Include Photo</span>
+                  </label>
+                </div>
+
+                {editTestimonialData.showPhoto ? (
+                  <div>
+                    <label className="block text-[10px] font-bold text-stone-600 mb-1">
+                      Photo Image URL (Optional)
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://images.unsplash.com/photo-..."
+                      value={editTestimonialData.photoUrl}
+                      onChange={(e) =>
+                        setEditTestimonialData({
+                          ...editTestimonialData,
+                          photoUrl: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 text-xs bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-stone-500 italic">
+                    Photo disabled: Renders a sleek circular initials avatar.
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditTestimonialModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs cursor-pointer transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-[#795238] hover:bg-[#633f27] text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition shadow-md"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Update Review</span>
                 </button>
               </div>
             </form>
@@ -3999,5 +5352,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
-
 

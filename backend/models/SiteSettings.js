@@ -49,9 +49,6 @@ const siteSettingsSchema = new mongoose.Schema(
           value: { type: String, required: true },
           label: { type: String, required: true },
           subtext: { type: String, required: true },
-          icon: { type: String, default: 'BookOpen' },
-          isVisible: { type: Boolean, default: true },
-          displayOrder: { type: Number, default: 0 },
         },
       ],
       default: [
@@ -60,46 +57,42 @@ const siteSettingsSchema = new mongoose.Schema(
           value: '20,000+',
           label: 'Books Available',
           subtext: 'Curriculum & fiction in stock',
-          icon: 'BookOpen',
-          isVisible: true,
-          displayOrder: 1,
         },
         {
           id: 'students_served',
           value: '12,000+',
           label: 'Students Served',
           subtext: 'Across universities & schools',
-          icon: 'Users',
-          isVisible: true,
-          displayOrder: 2,
         },
         {
           id: 'money_saved',
           value: 'Rs. 15 Lakhs+',
           label: 'Saved on Books',
           subtext: 'Versus new bookstore MRP',
-          icon: 'Recycle',
-          isVisible: true,
-          displayOrder: 3,
         },
         {
           id: 'delivery_hubs',
           value: '50+',
           label: 'Campus Delivery Hubs',
           subtext: 'Fast dropoff across Nepal',
-          icon: 'Heart',
-          isVisible: true,
-          displayOrder: 4,
         },
       ],
     },
 
-
-    // 4. BookCycle & Founder Story
+    // 4. BookCycle & Founder Story & Facilities
     bookCycle: {
+      missionTitle: { type: String, default: 'Our Mission & Story' },
+      missionSubtitle: {
+        type: String,
+        default: 'Making education & reading universally accessible across Nepal.',
+      },
       membershipPrice: { type: Number, default: 200 },
       membershipPeriod: { type: String, default: '/ month' },
-      tagline: { type: String, default: 'Read as many books as you like without purchasing every title. Return and rotate whenever you finish.' },
+      tagline: {
+        type: String,
+        default:
+          'Read as many books as you like without purchasing every title. Return and rotate whenever you finish.',
+      },
       features: {
         type: [String],
         default: [
@@ -112,16 +105,20 @@ const siteSettingsSchema = new mongoose.Schema(
       facilities: {
         type: [
           {
+            id: { type: String, default: () => 'fac_' + Math.random().toString(36).substring(2, 9) },
             title: { type: String, required: true },
             desc: { type: String, required: true },
+            icon: { type: String, default: 'BookOpen' },
+            isVisible: { type: Boolean, default: true },
+            displayOrder: { type: Number, default: 0 },
           },
         ],
         default: [
-          { title: 'Printed Notes', desc: 'Curriculum & syllabus guides' },
-          { title: 'Handwritten Notes', desc: 'Topper study summaries' },
-          { title: 'Free BookCycle', desc: 'Read & rotate indefinitely' },
-          { title: 'Book Requests', desc: 'Sourced within 48 hours' },
-          { title: 'Home Delivery', desc: 'Everywhere in Nepal' },
+          { id: 'fac_1', title: 'Printed Notes', desc: 'Curriculum & syllabus guides', icon: 'FileText', isVisible: true, displayOrder: 1 },
+          { id: 'fac_2', title: 'Handwritten Notes', desc: 'Topper study summaries', icon: 'Sparkles', isVisible: true, displayOrder: 2 },
+          { id: 'fac_3', title: 'Free BookCycle', desc: 'Read & rotate indefinitely', icon: 'RefreshCw', isVisible: true, displayOrder: 3 },
+          { id: 'fac_4', title: 'Book Requests', desc: 'Sourced within 48 hours', icon: 'Clock', isVisible: true, displayOrder: 4 },
+          { id: 'fac_5', title: 'Home Delivery', desc: 'Everywhere in Nepal', icon: 'Truck', isVisible: true, displayOrder: 5 },
         ],
       },
       founder: {
@@ -137,6 +134,7 @@ const siteSettingsSchema = new mongoose.Schema(
           default:
             'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=240&h=240&q=80',
         },
+        showImage: { type: Boolean, default: true },
       },
     },
 
@@ -175,6 +173,7 @@ const siteSettingsSchema = new mongoose.Schema(
       showFeaturedBooks: { type: Boolean, default: true },
       showBestSellers: { type: Boolean, default: true },
       showBookCycle: { type: Boolean, default: true },
+      showTestimonials: { type: Boolean, default: true },
     },
 
     // 8. Dynamic Categories (manageable via CMS)
@@ -202,6 +201,104 @@ const siteSettingsSchema = new mongoose.Schema(
         { id: 'bachelor_courses', name: 'Bachelor Courses', description: 'University', icon: 'BookMarked', isVisible: true, displayOrder: 10 },
       ],
     },
+
+    // 9. Student Testimonials (What People Say)
+    testimonials: {
+      type: [
+        {
+          id: { type: String, default: () => 'test_' + Math.random().toString(36).substring(2, 9) },
+          name: { type: String, required: true },
+          role: { type: String, default: 'Student' },
+          universityOrCity: { type: String, default: 'Kathmandu' },
+          quote: { type: String, required: true },
+          rating: { type: Number, default: 5 },
+          showPhoto: { type: Boolean, default: true },
+          photoUrl: { type: String, default: '' },
+          isVisible: { type: Boolean, default: true },
+          displayOrder: { type: Number, default: 0 },
+        },
+      ],
+      default: [
+        {
+          id: 'test_1',
+          name: 'Aarav Sharma',
+          role: 'Engineering Student',
+          universityOrCity: 'IOE Pulchowk Campus',
+          quote:
+            'SMARTKITAB saved me over Rs. 8,000 in my 3rd semester textbooks alone! The condition was clean and delivery arrived in 24 hours.',
+          rating: 5,
+          showPhoto: true,
+          photoUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&h=200&q=80',
+          isVisible: true,
+          displayOrder: 1,
+        },
+        {
+          id: 'test_2',
+          name: 'Sneha Shrestha',
+          role: 'Medical Student',
+          universityOrCity: 'Kathmandu University (KUMS)',
+          quote:
+            'Buying new MBBS reference books every year was crushing my budget. BookCycle and verified second-hand listings make study affordable.',
+          rating: 5,
+          showPhoto: true,
+          photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&h=200&q=80',
+          isVisible: true,
+          displayOrder: 2,
+        },
+        {
+          id: 'test_3',
+          name: 'Bibek Adhikari',
+          role: 'BBA Graduate',
+          universityOrCity: 'Pokhara University',
+          quote:
+            'I listed 6 books from my previous semester on SMARTKITAB and sold 4 of them in under a week. Quick payout and super seamless process!',
+          rating: 5,
+          showPhoto: false,
+          photoUrl: '',
+          isVisible: true,
+          displayOrder: 3,
+        },
+        {
+          id: 'test_4',
+          name: 'Pooja K.C.',
+          role: 'High School Student',
+          universityOrCity: "St. Xavier's College, Maitighar",
+          quote:
+            'The book condition verification is 100% accurate. My Grade 12 physics and chemistry books had zero torn pages and clean highlights.',
+          rating: 5,
+          showPhoto: true,
+          photoUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&h=200&q=80',
+          isVisible: true,
+          displayOrder: 4,
+        },
+      ],
+    },
+
+    // 10. Social Media & Direct Messaging Links
+    socialLinks: {
+      facebook: {
+        enabled: { type: Boolean, default: true },
+        url: { type: String, default: 'https://facebook.com/smartkitab' },
+      },
+      instagram: {
+        enabled: { type: Boolean, default: true },
+        url: { type: String, default: 'https://instagram.com/smartkitab' },
+      },
+      tiktok: {
+        enabled: { type: Boolean, default: true },
+        url: { type: String, default: 'https://tiktok.com/@smartkitab' },
+      },
+      youtube: {
+        enabled: { type: Boolean, default: true },
+        url: { type: String, default: 'https://youtube.com/@smartkitab' },
+      },
+      whatsapp: {
+        enabled: { type: Boolean, default: true },
+        url: { type: String, default: 'https://wa.me/9779800000000' },
+        phoneNumber: { type: String, default: '+977 9800000000' },
+      },
+    },
+
   },
   { timestamps: true }
 );

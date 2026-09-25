@@ -24,39 +24,29 @@ export const DEFAULT_SITE_SETTINGS = {
       value: '20,000+',
       label: 'Books Available',
       subtext: 'Curriculum & fiction in stock',
-      icon: 'BookOpen',
-      isVisible: true,
-      displayOrder: 1,
     },
     {
       id: 'students_served',
       value: '12,000+',
       label: 'Students Served',
       subtext: 'Across universities & schools',
-      icon: 'Users',
-      isVisible: true,
-      displayOrder: 2,
     },
     {
       id: 'money_saved',
       value: 'Rs. 15 Lakhs+',
       label: 'Saved on Books',
       subtext: 'Versus new bookstore MRP',
-      icon: 'Recycle',
-      isVisible: true,
-      displayOrder: 3,
     },
     {
       id: 'delivery_hubs',
       value: '50+',
       label: 'Campus Delivery Hubs',
       subtext: 'Fast dropoff across Nepal',
-      icon: 'Heart',
-      isVisible: true,
-      displayOrder: 4,
     },
   ],
   bookCycle: {
+    missionTitle: 'Our Mission & Story',
+    missionSubtitle: 'Making education & reading universally accessible across Nepal.',
     membershipPrice: 200,
     membershipPeriod: '/ month',
     tagline:
@@ -68,11 +58,11 @@ export const DEFAULT_SITE_SETTINGS = {
       'Exclusive Discounts on purchases',
     ],
     facilities: [
-      { title: 'Printed Notes', desc: 'Curriculum & syllabus guides' },
-      { title: 'Handwritten Notes', desc: 'Topper study summaries' },
-      { title: 'Free BookCycle', desc: 'Read & rotate indefinitely' },
-      { title: 'Book Requests', desc: 'Sourced within 48 hours' },
-      { title: 'Home Delivery', desc: 'Everywhere in Nepal' },
+      { id: 'fac_1', title: 'Printed Notes', desc: 'Curriculum & syllabus guides', icon: 'FileText', isVisible: true, displayOrder: 1 },
+      { id: 'fac_2', title: 'Handwritten Notes', desc: 'Topper study summaries', icon: 'Sparkles', isVisible: true, displayOrder: 2 },
+      { id: 'fac_3', title: 'Free BookCycle', desc: 'Read & rotate indefinitely', icon: 'RefreshCw', isVisible: true, displayOrder: 3 },
+      { id: 'fac_4', title: 'Book Requests', desc: 'Sourced within 48 hours', icon: 'Clock', isVisible: true, displayOrder: 4 },
+      { id: 'fac_5', title: 'Home Delivery', desc: 'Everywhere in Nepal', icon: 'Truck', isVisible: true, displayOrder: 5 },
     ],
     founder: {
       name: 'Shraddha',
@@ -81,6 +71,7 @@ export const DEFAULT_SITE_SETTINGS = {
         "Hi, I'm Shraddha! I founded SMARTKITAB because I watched countless fellow students spend a fortune on semester textbooks they only needed for a few months. Our mission is to make reading and education universally affordable across Nepal by giving every book a second home.",
       imageUrl:
         'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=240&h=240&q=80',
+      showImage: true,
     },
   },
   contact: {
@@ -103,6 +94,7 @@ export const DEFAULT_SITE_SETTINGS = {
     showFeaturedBooks: true,
     showBestSellers: true,
     showBookCycle: true,
+    showTestimonials: true,
   },
   categories: [
     { id: 'novels', name: 'Novels', description: 'Fiction & Literature', icon: 'BookOpen', isVisible: true, displayOrder: 1 },
@@ -116,6 +108,67 @@ export const DEFAULT_SITE_SETTINGS = {
     { id: 'grade_12', name: 'Grade 12', description: 'Board Exams', icon: 'Layers', isVisible: true, displayOrder: 9 },
     { id: 'bachelor_courses', name: 'Bachelor Courses', description: 'University', icon: 'BookMarked', isVisible: true, displayOrder: 10 },
   ],
+  testimonials: [
+    {
+      id: 'test_1',
+      name: 'Aarav Sharma',
+      role: 'Engineering Student',
+      universityOrCity: 'IOE Pulchowk Campus',
+      quote:
+        'SMARTKITAB saved me over Rs. 8,000 in my 3rd semester textbooks alone! The condition was clean and delivery arrived in 24 hours.',
+      rating: 5,
+      showPhoto: true,
+      photoUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&h=200&q=80',
+      isVisible: true,
+      displayOrder: 1,
+    },
+    {
+      id: 'test_2',
+      name: 'Sneha Shrestha',
+      role: 'Medical Student',
+      universityOrCity: 'Kathmandu University (KUMS)',
+      quote:
+        'Buying new MBBS reference books every year was crushing my budget. BookCycle and verified second-hand listings make study affordable.',
+      rating: 5,
+      showPhoto: true,
+      photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&h=200&q=80',
+      isVisible: true,
+      displayOrder: 2,
+    },
+    {
+      id: 'test_3',
+      name: 'Bibek Adhikari',
+      role: 'BBA Graduate',
+      universityOrCity: 'Pokhara University',
+      quote:
+        'I listed 6 books from my previous semester on SMARTKITAB and sold 4 of them in under a week. Quick payout and super seamless process!',
+      rating: 5,
+      showPhoto: false,
+      photoUrl: '',
+      isVisible: true,
+      displayOrder: 3,
+    },
+    {
+      id: 'test_4',
+      name: 'Pooja K.C.',
+      role: 'High School Student',
+      universityOrCity: "St. Xavier's College, Maitighar",
+      quote:
+        'The book condition verification is 100% accurate. My Grade 12 physics and chemistry books had zero torn pages and clean highlights.',
+      rating: 5,
+      showPhoto: true,
+      photoUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&h=200&q=80',
+      isVisible: true,
+      displayOrder: 4,
+    },
+  ],
+  socialLinks: {
+    facebook: { enabled: true, url: 'https://facebook.com/smartkitab' },
+    instagram: { enabled: true, url: 'https://instagram.com/smartkitab' },
+    tiktok: { enabled: true, url: 'https://tiktok.com/@smartkitab' },
+    youtube: { enabled: true, url: 'https://youtube.com/@smartkitab' },
+    whatsapp: { enabled: true, url: 'https://wa.me/9779800000000', phoneNumber: '+977 9800000000' },
+  },
 };
 
 export function SiteSettingsProvider({ children }) {
@@ -139,6 +192,11 @@ export function SiteSettingsProvider({ children }) {
           bookCycle: {
             ...prev.bookCycle,
             ...(res.data.settings.bookCycle || {}),
+            facilities:
+              Array.isArray(res.data.settings.bookCycle?.facilities) &&
+              res.data.settings.bookCycle.facilities.length > 0
+                ? res.data.settings.bookCycle.facilities
+                : prev.bookCycle.facilities,
             founder: {
               ...prev.bookCycle.founder,
               ...(res.data.settings.bookCycle?.founder || {}),
@@ -151,6 +209,14 @@ export function SiteSettingsProvider({ children }) {
             Array.isArray(res.data.settings.categories) && res.data.settings.categories.length > 0
               ? res.data.settings.categories
               : prev.categories,
+          testimonials:
+            Array.isArray(res.data.settings.testimonials) && res.data.settings.testimonials.length > 0
+              ? res.data.settings.testimonials
+              : prev.testimonials,
+          socialLinks: {
+            ...prev.socialLinks,
+            ...(res.data.settings.socialLinks || {}),
+          },
         }));
       }
     } catch (err) {

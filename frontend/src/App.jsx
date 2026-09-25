@@ -7,6 +7,7 @@ import CategoryGrid from './components/CategoryGrid';
 import FeaturedBooksSection from './components/FeaturedBooksSection';
 import BestSellersSection from './components/BestSellersSection';
 import BookCycleBanner from './components/BookCycleBanner';
+import TestimonialsSection from './components/TestimonialsSection';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -106,6 +107,9 @@ function HomePage({ onAddToCart }) {
           onGiftClick={() => navigate('/catalog')}
         />
       )}
+
+      {/* 7. Student & Reader Testimonials */}
+      {sections.showTestimonials !== false && <TestimonialsSection />}
     </>
   );
 }
