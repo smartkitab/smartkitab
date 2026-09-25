@@ -121,6 +121,34 @@ const siteSettingsSchema = new mongoose.Schema(
           { id: 'fac_5', title: 'Home Delivery', desc: 'Everywhere in Nepal', icon: 'Truck', isVisible: true, displayOrder: 5 },
         ],
       },
+      founders: {
+        type: [
+          {
+            id: { type: String, default: () => 'fnd_' + Math.random().toString(36).substring(2, 9) },
+            name: { type: String, required: true },
+            role: { type: String, default: 'Founder / Co-Founder' },
+            quote: { type: String, default: '' },
+            imageUrl: { type: String, default: '' },
+            showImage: { type: Boolean, default: true },
+            isVisible: { type: Boolean, default: true },
+            displayOrder: { type: Number, default: 0 },
+          },
+        ],
+        default: [
+          {
+            id: 'fnd_1',
+            name: 'Shraddha',
+            role: 'Founder & Community Lead',
+            quote:
+              "Hi, I'm Shraddha! I founded SMARTKITAB because I watched countless fellow students spend a fortune on semester textbooks they only needed for a few months. Our mission is to make reading and education universally affordable across Nepal by giving every book a second home.",
+            imageUrl:
+              'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=240&h=240&q=80',
+            showImage: true,
+            isVisible: true,
+            displayOrder: 1,
+          },
+        ],
+      },
       founder: {
         name: { type: String, default: 'Shraddha' },
         role: { type: String, default: 'Founder & Community Lead' },

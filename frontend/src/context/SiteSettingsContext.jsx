@@ -64,6 +64,20 @@ export const DEFAULT_SITE_SETTINGS = {
       { id: 'fac_4', title: 'Book Requests', desc: 'Sourced within 48 hours', icon: 'Clock', isVisible: true, displayOrder: 4 },
       { id: 'fac_5', title: 'Home Delivery', desc: 'Everywhere in Nepal', icon: 'Truck', isVisible: true, displayOrder: 5 },
     ],
+    founders: [
+      {
+        id: 'fnd_1',
+        name: 'Shraddha',
+        role: 'Founder & Community Lead',
+        quote:
+          "Hi, I'm Shraddha! I founded SMARTKITAB because I watched countless fellow students spend a fortune on semester textbooks they only needed for a few months. Our mission is to make reading and education universally affordable across Nepal by giving every book a second home.",
+        imageUrl:
+          'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=240&h=240&q=80',
+        showImage: true,
+        isVisible: true,
+        displayOrder: 1,
+      },
+    ],
     founder: {
       name: 'Shraddha',
       role: 'Founder & Community Lead',

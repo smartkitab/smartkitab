@@ -345,13 +345,24 @@ export default function AdminDashboard() {
     showPhoto: true,
   });
 
-  // ================= DYNAMIC IMPACT METRICS STATE =================
-  const [newMetricModalOpen, setNewMetricModalOpen] = useState(false);
-  const [newMetricData, setNewMetricData] = useState({
-    value: '',
-    label: '',
-    subtext: '',
-    icon: 'BookOpen',
+  // ================= DYNAMIC FOUNDERS / CO-FOUNDERS STATE =================
+  const [newFounderModalOpen, setNewFounderModalOpen] = useState(false);
+  const [newFounderData, setNewFounderData] = useState({
+    name: '',
+    role: '',
+    quote: '',
+    imageUrl: '',
+    showImage: true,
+  });
+  const [editFounderModalOpen, setEditFounderModalOpen] = useState(false);
+  const [editFounderData, setEditFounderData] = useState({
+    index: -1,
+    id: '',
+    name: '',
+    role: '',
+    quote: '',
+    imageUrl: '',
+    showImage: true,
   });
 
   // ================= CMS & Site Settings State =================
@@ -407,60 +418,6 @@ export default function AdminDashboard() {
       const updated = [...(prev?.metrics || [])];
       updated[index] = { ...updated[index], [field]: value };
       return { ...prev, metrics: updated };
-    });
-  };
-
-  const handleAddMetric = () => {
-    if (!newMetricData.label.trim() || !newMetricData.value.trim()) return;
-    const metricId = newMetricData.label.toLowerCase().trim().replace(/[^a-z0-9]+/g, '_');
-    const newMetric = {
-      id: metricId,
-      value: newMetricData.value.trim(),
-      label: newMetricData.label.trim(),
-      subtext: newMetricData.subtext.trim(),
-      icon: newMetricData.icon || 'BookOpen',
-      isVisible: true,
-      displayOrder: (cmsData?.metrics?.length || 0) + 1,
-    };
-    setCmsData((prev) => ({
-      ...prev,
-      metrics: [...(prev.metrics || []), newMetric],
-    }));
-    setNewMetricModalOpen(false);
-    setNewMetricData({ value: '', label: '', subtext: '', icon: 'BookOpen' });
-    showToast(`Added metric "${newMetric.label}". Click Save to persist!`);
-  };
-
-  const handleToggleMetricVisibility = (index) => {
-    setCmsData((prev) => {
-      const mets = [...(prev.metrics || [])];
-      mets[index] = { ...mets[index], isVisible: !mets[index].isVisible };
-      return { ...prev, metrics: mets };
-    });
-  };
-
-  const handleDeleteMetric = (index) => {
-    if (!window.confirm('Are you sure you want to delete this metric card?')) return;
-    setCmsData((prev) => {
-      const mets = [...(prev.metrics || [])];
-      mets.splice(index, 1);
-      return { ...prev, metrics: mets };
-    });
-    showToast('Metric card removed. Click Save to persist!');
-  };
-
-  const handleMoveMetric = (index, direction) => {
-    setCmsData((prev) => {
-      const mets = [...(prev.metrics || [])];
-      const targetIndex = index + direction;
-      if (targetIndex < 0 || targetIndex >= mets.length) return prev;
-      const temp = mets[index];
-      mets[index] = mets[targetIndex];
-      mets[targetIndex] = temp;
-      mets.forEach((m, idx) => {
-        m.displayOrder = idx + 1;
-      });
-      return { ...prev, metrics: mets };
     });
   };
 
@@ -708,6 +665,123 @@ export default function AdminDashboard() {
         bookCycle: {
           ...(prev?.bookCycle || {}),
           facilities: facs,
+        },
+      };
+    });
+  };
+
+  // Founders / Co-Founders management inside CMS
+  const handleAddFounder = () => {
+    if (!newFounderData.name.trim()) return;
+    const founderId = `fnd_${Date.now()}`;
+    const newFnd = {
+      id: founderId,
+      name: newFounderData.name.trim(),
+      role: newFounderData.role.trim() || 'Founder / Co-Founder',
+      quote: newFounderData.quote.trim(),
+      imageUrl: newFounderData.imageUrl.trim(),
+      showImage: Boolean(newFounderData.showImage),
+      isVisible: true,
+      displayOrder: (cmsData?.bookCycle?.founders?.length || 0) + 1,
+    };
+    setCmsData((prev) => ({
+      ...prev,
+      bookCycle: {
+        ...(prev?.bookCycle || {}),
+        founders: [...(prev?.bookCycle?.founders || []), newFnd],
+      },
+    }));
+    setNewFounderModalOpen(false);
+    setNewFounderData({ name: '', role: '', quote: '', imageUrl: '', showImage: true });
+    showToast(`Added founder "${newFnd.name}". Click Save to persist!`);
+  };
+
+  const handleOpenEditFounder = (index, fnd) => {
+    setEditFounderData({
+      index,
+      id: fnd.id || `fnd_${index}`,
+      name: fnd.name || '',
+      role: fnd.role || '',
+      quote: fnd.quote || '',
+      imageUrl: fnd.imageUrl || '',
+      showImage: fnd.showImage !== false,
+    });
+    setEditFounderModalOpen(true);
+  };
+
+  const handleSaveEditFounder = (e) => {
+    if (e) e.preventDefault();
+    if (!editFounderData.name.trim()) return;
+    setCmsData((prev) => {
+      const fnds = [...(prev?.bookCycle?.founders || [])];
+      if (editFounderData.index >= 0 && editFounderData.index < fnds.length) {
+        fnds[editFounderData.index] = {
+          ...fnds[editFounderData.index],
+          name: editFounderData.name.trim(),
+          role: editFounderData.role.trim(),
+          quote: editFounderData.quote.trim(),
+          imageUrl: editFounderData.imageUrl.trim(),
+          showImage: Boolean(editFounderData.showImage),
+        };
+      }
+      return {
+        ...prev,
+        bookCycle: {
+          ...(prev?.bookCycle || {}),
+          founders: fnds,
+        },
+      };
+    });
+    setEditFounderModalOpen(false);
+    showToast(`Updated founder "${editFounderData.name}". Click Save to persist!`);
+  };
+
+  const handleToggleFounderVisibility = (index) => {
+    setCmsData((prev) => {
+      const fnds = [...(prev?.bookCycle?.founders || [])];
+      fnds[index] = { ...fnds[index], isVisible: !fnds[index].isVisible };
+      return {
+        ...prev,
+        bookCycle: {
+          ...(prev?.bookCycle || {}),
+          founders: fnds,
+        },
+      };
+    });
+  };
+
+  const handleDeleteFounder = (index) => {
+    if (!window.confirm('Are you sure you want to remove this founder card?')) return;
+    setCmsData((prev) => {
+      const fnds = [...(prev?.bookCycle?.founders || [])];
+      fnds.splice(index, 1);
+      return {
+        ...prev,
+        bookCycle: {
+          ...(prev?.bookCycle || {}),
+          founders: fnds,
+        },
+      };
+    });
+    showToast('Founder card removed. Click Save to persist!');
+  };
+
+  const handleMoveFounder = (index, direction) => {
+    setCmsData((prev) => {
+      const fnds = [...(prev?.bookCycle?.founders || [])];
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= fnds.length) return prev;
+      const temp = fnds[index];
+      fnds[index] = fnds[targetIndex];
+      fnds[targetIndex] = temp;
+      fnds.forEach((f, idx) => {
+        f.displayOrder = idx + 1;
+      });
+      return {
+        ...prev,
+        bookCycle: {
+          ...(prev?.bookCycle || {}),
+          founders: fnds,
         },
       };
     });
@@ -2598,16 +2672,16 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* SUB-TAB: BOOKCYCLE & FOUNDER MISSION */}
+            {/* SUB-TAB: BOOKCYCLE & MULTI-FOUNDER MISSION */}
             {cmsSubTab === 'bookcycle' && (
               <div className="space-y-6">
                 <div className="bg-white rounded-3xl border border-[#795238]/15 p-6 shadow-xs space-y-6">
                   <div>
                     <h3 className="text-base font-black text-[#795238]">
-                      Our Mission, Founder Story & BookCycle Membership
+                      Our Mission, Founders & Co-Founders, and BookCycle
                     </h3>
                     <p className="text-xs text-stone-600 mt-0.5">
-                      Configure the mission headline, founder quote, founder photo toggle, subscription plan pricing, and feature list.
+                      Configure your mission narrative, add multiple founders/co-founders with individual bios & photos, and adjust BookCycle membership plans.
                     </p>
                   </div>
 
@@ -2644,72 +2718,157 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  {/* Founder Story row with Photo toggle */}
+                  {/* Multiple Founders & Co-Founders Manager */}
                   <div className="p-4 rounded-2xl bg-[#FAF6EF]/60 border border-[#795238]/15 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-black text-[#795238] uppercase tracking-wider">
-                        Founder Mission Quote & Profile
-                      </span>
-                      <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1 rounded-xl border border-stone-200">
-                        <input
-                          type="checkbox"
-                          checked={cmsData?.bookCycle?.founder?.showImage !== false}
-                          onChange={(e) => updateFounderField('showImage', e.target.checked)}
-                          className="w-4 h-4 accent-[#795238] rounded cursor-pointer"
-                        />
-                        <span className="text-xs font-bold text-stone-800">Show Founder Photo</span>
-                      </label>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <span className="text-xs font-black text-[#795238] uppercase tracking-wider block">
+                          Founders & Leadership Team
+                        </span>
+                        <span className="text-[11px] text-stone-500">
+                          Add multiple founders and co-founders. Each profile can display a custom photo, role, and story quote.
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setNewFounderModalOpen(true)}
+                        className="px-3.5 py-2 rounded-xl bg-[#795238] hover:bg-[#633f27] text-white text-xs font-bold flex items-center gap-1.5 transition shadow-xs cursor-pointer self-start sm:self-auto shrink-0"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Add Founder / Co-Founder</span>
+                      </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                          Founder Name
-                        </label>
-                        <input
-                          type="text"
-                          value={cmsData?.bookCycle?.founder?.name || ''}
-                          onChange={(e) => updateFounderField('name', e.target.value)}
-                          className="w-full px-3 py-2 text-xs font-bold text-stone-900 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
-                          placeholder="Shraddha"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                          Role / Title
-                        </label>
-                        <input
-                          type="text"
-                          value={cmsData?.bookCycle?.founder?.role || ''}
-                          onChange={(e) => updateFounderField('role', e.target.value)}
-                          className="w-full px-3 py-2 text-xs font-bold text-stone-900 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
-                          placeholder="Founder & Community Lead"
-                        />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                          Avatar Image URL (Optional if Show Photo is enabled)
-                        </label>
-                        <input
-                          type="text"
-                          value={cmsData?.bookCycle?.founder?.imageUrl || ''}
-                          onChange={(e) => updateFounderField('imageUrl', e.target.value)}
-                          className="w-full px-3 py-2 text-xs text-stone-800 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
-                          placeholder="https://images.unsplash.com/photo-..."
-                        />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                          Founder Mission Quote / Story
-                        </label>
-                        <textarea
-                          rows={3}
-                          value={cmsData?.bookCycle?.founder?.quote || ''}
-                          onChange={(e) => updateFounderField('quote', e.target.value)}
-                          className="w-full px-3 py-2 text-xs text-stone-800 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
-                          placeholder="Hi, I'm Shraddha! I founded SMARTKITAB because..."
-                        />
-                      </div>
+                    <div className="space-y-3 pt-1">
+                      {(cmsData?.bookCycle?.founders || []).length === 0 ? (
+                        <div className="p-6 text-center bg-white rounded-xl border border-dashed border-[#795238]/20 text-stone-500 text-xs">
+                          No founders added. Click "Add Founder / Co-Founder" above to add your leadership team.
+                        </div>
+                      ) : (
+                        (cmsData?.bookCycle?.founders || []).map((fnd, idx) => {
+                          const showPhoto = fnd.showImage !== false && fnd.imageUrl && fnd.imageUrl.trim().length > 0;
+                          const initials = (fnd.name || 'F')
+                            .split(' ')
+                            .map((n) => n[0])
+                            .join('')
+                            .substring(0, 2)
+                            .toUpperCase();
+
+                          return (
+                            <div
+                              key={fnd.id || idx}
+                              className={`p-4 rounded-2xl border transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${
+                                fnd.isVisible !== false
+                                  ? 'bg-white border-[#795238]/15 shadow-2xs'
+                                  : 'bg-stone-50 border-stone-200 opacity-60'
+                              }`}
+                            >
+                              <div className="flex items-start gap-3.5 min-w-0">
+                                {showPhoto ? (
+                                  <img
+                                    src={fnd.imageUrl}
+                                    alt={fnd.name}
+                                    className="w-12 h-12 rounded-2xl object-cover border-2 border-[#795238]/20 shadow-2xs shrink-0"
+                                  />
+                                ) : (
+                                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#795238] to-stone-800 text-white font-black text-xs flex items-center justify-center shadow-2xs shrink-0">
+                                    {initials}
+                                  </div>
+                                )}
+
+                                <div className="min-w-0 space-y-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <h4 className="text-sm font-black text-stone-900 truncate">
+                                      {fnd.name}
+                                    </h4>
+                                    <span className="text-[11px] font-bold text-[#795238] bg-[#FAF6EF] px-2 py-0.5 rounded border border-[#795238]/20">
+                                      {fnd.role || 'Co-Founder'}
+                                    </span>
+                                    <span
+                                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                                        fnd.isVisible !== false
+                                          ? 'bg-emerald-100 text-[#365314]'
+                                          : 'bg-amber-100 text-amber-800'
+                                      }`}
+                                    >
+                                      {fnd.isVisible !== false ? 'Visible' : 'Hidden'}
+                                    </span>
+                                  </div>
+
+                                  {fnd.quote && (
+                                    <p className="text-xs text-stone-600 italic line-clamp-2 leading-relaxed">
+                                      "{fnd.quote}"
+                                    </p>
+                                  )}
+
+                                  <p className="text-[10px] text-stone-400">
+                                    Photo: {fnd.showImage !== false ? 'Enabled' : 'Disabled (Initials badge)'}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0 self-end lg:self-auto">
+                                <button
+                                  type="button"
+                                  onClick={() => handleMoveFounder(idx, -1)}
+                                  disabled={idx === 0}
+                                  title="Move Up"
+                                  className="p-2 rounded-xl bg-stone-50 hover:bg-stone-100 border border-stone-200 text-stone-600 disabled:opacity-30 cursor-pointer"
+                                >
+                                  <ArrowUp className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleMoveFounder(idx, 1)}
+                                  disabled={idx === (cmsData?.bookCycle?.founders?.length || 0) - 1}
+                                  title="Move Down"
+                                  className="p-2 rounded-xl bg-stone-50 hover:bg-stone-100 border border-stone-200 text-stone-600 disabled:opacity-30 cursor-pointer"
+                                >
+                                  <ArrowDown className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenEditFounder(idx, fnd)}
+                                  className="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-[#FAF6EF] hover:bg-[#FAF6EF]/80 border border-[#795238]/30 text-[#795238] transition cursor-pointer"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                  <span>Edit</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleFounderVisibility(idx)}
+                                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition cursor-pointer ${
+                                    fnd.isVisible !== false
+                                      ? 'bg-white hover:bg-amber-50 border-amber-200 text-amber-800'
+                                      : 'bg-white hover:bg-emerald-50 border-emerald-200 text-[#365314]'
+                                  }`}
+                                >
+                                  {fnd.isVisible !== false ? (
+                                    <>
+                                      <EyeOff className="w-3.5 h-3.5" />
+                                      <span>Hide</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Eye className="w-3.5 h-3.5" />
+                                      <span>Show</span>
+                                    </>
+                                  )}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteFounder(idx)}
+                                  className="p-2 rounded-xl bg-white hover:bg-rose-50 border border-rose-200 text-rose-600 cursor-pointer hover:bg-rose-100 transition"
+                                  title="Delete Founder"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
                   </div>
 
@@ -2944,175 +3103,74 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* SUB-TAB: IMPACT METRICS CMS */}
+            {/* SUB-TAB 1: METRICS */}
             {cmsSubTab === 'metrics' && (
               <div className="space-y-6">
                 <div className="bg-white rounded-3xl border border-[#795238]/15 p-6 shadow-xs space-y-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <h3 className="text-base font-black text-[#795238]">
-                        Platform Impact Metrics (20,000+ Books, 12,000+ Students...)
-                      </h3>
-                      <p className="text-xs text-stone-600 mt-0.5">
-                        Add, edit, delete, reorder, or hide/unhide the key impact counters displayed right below the homepage hero banner.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setNewMetricModalOpen(true)}
-                      className="px-4 py-2.5 rounded-xl bg-[#795238] hover:bg-[#633f27] text-white text-xs font-bold flex items-center gap-2 transition shadow-xs cursor-pointer self-start sm:self-auto shrink-0"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>Add Metric Card</span>
-                    </button>
+                  <div>
+                    <h3 className="text-base font-black text-[#795238]">
+                      Platform Impact Metrics
+                    </h3>
+                    <p className="text-xs text-stone-600 mt-0.5">
+                      Configure the 4 vital platform statistics shown right below the hero on the homepage. Change numbers (e.g. 20,000+ books, 12,000+ students served) and titles at any time.
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {(cmsData?.metrics || []).map((m, idx) => {
-                      const IconComponent = ICON_MAP[m.icon] || BookOpen;
-                      const isVisible = m.isVisible !== false;
-
-                      return (
-                        <div
-                          key={m.id || idx}
-                          className={`p-5 rounded-2xl border transition-all space-y-3.5 ${
-                            isVisible
-                              ? 'bg-[#FAF6EF]/70 border-[#795238]/15'
-                              : 'bg-stone-50 border-stone-200 opacity-60'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-lg bg-white border border-[#795238]/20 flex items-center justify-center text-[#795238]">
-                                <IconComponent className="w-4 h-4" />
-                              </div>
-                              <span className="text-xs font-black text-[#795238] uppercase tracking-wider">
-                                Card #{idx + 1}
-                              </span>
-                            </div>
-
-                            <div className="flex items-center gap-1.5">
-                              {/* Move Up */}
-                              <button
-                                type="button"
-                                onClick={() => handleMoveMetric(idx, -1)}
-                                disabled={idx === 0}
-                                title="Move Left / Up"
-                                className="p-1.5 rounded-lg bg-white hover:bg-stone-100 border border-stone-200 text-stone-600 disabled:opacity-30 cursor-pointer"
-                              >
-                                <ArrowUp className="w-3.5 h-3.5" />
-                              </button>
-
-                              {/* Move Down */}
-                              <button
-                                type="button"
-                                onClick={() => handleMoveMetric(idx, 1)}
-                                disabled={idx === (cmsData?.metrics?.length || 0) - 1}
-                                title="Move Right / Down"
-                                className="p-1.5 rounded-lg bg-white hover:bg-stone-100 border border-stone-200 text-stone-600 disabled:opacity-30 cursor-pointer"
-                              >
-                                <ArrowDown className="w-3.5 h-3.5" />
-                              </button>
-
-                              {/* Hide / Show Toggle */}
-                              <button
-                                type="button"
-                                onClick={() => handleToggleMetricVisibility(idx)}
-                                className={`px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 border transition cursor-pointer ${
-                                  isVisible
-                                    ? 'bg-white hover:bg-amber-50 border-amber-200 text-amber-800'
-                                    : 'bg-white hover:bg-emerald-50 border-emerald-200 text-[#365314]'
-                                }`}
-                              >
-                                {isVisible ? (
-                                  <>
-                                    <EyeOff className="w-3 h-3" />
-                                    <span>Hide</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Eye className="w-3 h-3" />
-                                    <span>Show</span>
-                                  </>
-                                )}
-                              </button>
-
-                              {/* Delete Card */}
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteMetric(idx)}
-                                className="p-1.5 rounded-lg bg-white hover:bg-rose-50 border border-rose-200 text-rose-600 cursor-pointer transition hover:bg-rose-100"
-                                title="Delete Metric Card"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                              <label className="block text-[10px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                                Display Value (Number / Milestone) *
-                              </label>
-                              <input
-                                type="text"
-                                value={m.value || ''}
-                                onChange={(e) => updateMetricItem(idx, 'value', e.target.value)}
-                                className="w-full px-3 py-2 text-sm font-black text-[#795238] bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
-                                placeholder="e.g. 20,000+"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-[10px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                                Icon
-                              </label>
-                              <select
-                                value={m.icon || 'BookOpen'}
-                                onChange={(e) => updateMetricItem(idx, 'icon', e.target.value)}
-                                className="w-full px-3 py-2 text-xs font-bold text-stone-900 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
-                              >
-                                <option value="BookOpen">📖 Book Open</option>
-                                <option value="Users">👥 Users / Students</option>
-                                <option value="Recycle">🔄 Recycle / Circular</option>
-                                <option value="Heart">❤️ Heart / Community</option>
-                                <option value="DollarSign">💰 Money Saved</option>
-                                <option value="TrendingUp">📈 Growth / Trend</option>
-                                <option value="Award">🏆 Award / Quality</option>
-                                <option value="Sparkles">✨ Sparkles / Perks</option>
-                                <option value="GraduationCap">🎓 Graduation Cap</option>
-                              </select>
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-[10px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                              Label Title (Heading) *
-                            </label>
-                            <input
-                              type="text"
-                              value={m.label || ''}
-                              onChange={(e) => updateMetricItem(idx, 'label', e.target.value)}
-                              className="w-full px-3 py-2 text-xs font-bold text-stone-900 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
-                              placeholder="e.g. Books Available"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-[10px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                              Subtext / Descriptive Narrative
-                            </label>
-                            <input
-                              type="text"
-                              value={m.subtext || ''}
-                              onChange={(e) => updateMetricItem(idx, 'subtext', e.target.value)}
-                              className="w-full px-3 py-2 text-xs text-stone-600 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
-                              placeholder="e.g. Curriculum & fiction in stock"
-                            />
-                          </div>
+                    {(cmsData?.metrics || []).map((m, idx) => (
+                      <div
+                        key={m.id || idx}
+                        className="p-5 rounded-2xl bg-[#FAF6EF]/70 border border-[#795238]/15 space-y-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black text-[#795238] uppercase tracking-wider">
+                            Metric #{idx + 1} ({m.id})
+                          </span>
+                          <span className="text-[11px] font-bold text-stone-500 bg-white px-2 py-0.5 rounded-full border border-stone-200">
+                            Slot {idx + 1} of 4
+                          </span>
                         </div>
-                      );
-                    })}
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                            Displayed Value (e.g. 20,000+ or Rs. 15 Lakhs+)
+                          </label>
+                          <input
+                            type="text"
+                            value={m.value || ''}
+                            onChange={(e) => updateMetricItem(idx, 'value', e.target.value)}
+                            className="w-full px-3 py-2 text-sm font-black text-[#795238] bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                            placeholder="e.g. 20,000+"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                            Label Title (e.g. Books Available)
+                          </label>
+                          <input
+                            type="text"
+                            value={m.label || ''}
+                            onChange={(e) => updateMetricItem(idx, 'label', e.target.value)}
+                            className="w-full px-3 py-2 text-xs font-bold text-stone-900 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                            placeholder="e.g. Books Available"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                            Subtext / Context Description
+                          </label>
+                          <input
+                            type="text"
+                            value={m.subtext || ''}
+                            onChange={(e) => updateMetricItem(idx, 'subtext', e.target.value)}
+                            className="w-full px-3 py-2 text-xs text-stone-600 bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                            placeholder="e.g. Curriculum & fiction in stock"
+                          />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -3129,22 +3187,20 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="bg-white rounded-2xl p-6 border border-[#795238]/15 shadow-sm">
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 divide-y lg:divide-y-0 lg:divide-x divide-[#795238]/10 text-center">
-                      {(cmsData?.metrics || [])
-                        .filter((m) => m.isVisible !== false)
-                        .map((m, idx) => (
-                          <div key={idx} className="pt-3 lg:pt-0 lg:px-3">
-                            <p className="text-2xl sm:text-3xl font-black text-[#795238] tracking-tight">
-                              {m.value || '—'}
-                            </p>
-                            <p className="text-xs sm:text-sm font-bold text-stone-900 mt-1">
-                              {m.label || '—'}
-                            </p>
-                            <p className="text-[11px] text-stone-500 mt-0.5">
-                              {m.subtext || '—'}
-                            </p>
-                          </div>
-                        ))}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 divide-y lg:divide-y-0 lg:divide-x divide-[#795238]/10 text-center">
+                      {(cmsData?.metrics || []).map((m, idx) => (
+                        <div key={idx} className="pt-4 lg:pt-0 lg:px-4">
+                          <p className="text-2xl sm:text-3xl font-black text-[#795238] tracking-tight">
+                            {m.value || '—'}
+                          </p>
+                          <p className="text-xs sm:text-sm font-bold text-stone-900 mt-1">
+                            {m.label || '—'}
+                          </p>
+                          <p className="text-[11px] text-stone-500 mt-0.5">
+                            {m.subtext || '—'}
+                          </p>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -5515,129 +5571,137 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* ================= ADD NEW METRIC MODAL ================= */}
-      {newMetricModalOpen && (
+      {/* ================= ADD NEW FOUNDER / CO-FOUNDER MODAL ================= */}
+      {newFounderModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl border border-[#795238]/20 max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden">
+          <div className="bg-white rounded-3xl border border-[#795238]/20 max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden max-h-[90vh] overflow-y-auto">
             <button
-              onClick={() => setNewMetricModalOpen(false)}
+              onClick={() => setNewFounderModalOpen(false)}
               className="absolute top-5 right-5 p-1.5 rounded-full hover:bg-stone-100 text-stone-500 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="flex items-center gap-2 text-xs font-bold text-[#795238] bg-[#FAF6EF] px-3 py-1 rounded-full w-fit">
-              <TrendingUp className="w-4 h-4 text-[#795238]" />
-              <span>Impact Metrics CMS</span>
+              <Crown className="w-4 h-4 text-amber-600" />
+              <span>Founders & Leadership Team</span>
             </div>
 
             <div>
               <h3 className="text-xl font-black text-stone-900">
-                Add New Impact Counter
+                Add Founder / Co-Founder
               </h3>
               <p className="text-xs text-stone-600 mt-0.5">
-                Add a milestone or statistic card (e.g. 5,000+ Trees Saved, 24-Hr Delivery) to the homepage metrics bar.
+                Add a founder or co-founder profile card to the BookCycle & Mission section.
               </p>
             </div>
 
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                handleAddMetric();
+                handleAddFounder();
               }}
               className="space-y-4"
             >
-              <div>
-                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Metric Value (Number / Milestone) *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. 15,000+ or Rs. 10 Lakhs+"
-                  value={newMetricData.value}
-                  onChange={(e) =>
-                    setNewMetricData({ ...newMetricData, value: e.target.value })
-                  }
-                  className="w-full px-3 py-2 text-sm font-black text-[#795238] bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                    Founder Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Shraddha / Aayush"
+                    value={newFounderData.name}
+                    onChange={(e) =>
+                      setNewFounderData({ ...newFounderData, name: e.target.value })
+                    }
+                    className="w-full px-3 py-2 text-sm bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                    Role / Position *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Co-Founder & Tech Lead"
+                    value={newFounderData.role}
+                    onChange={(e) =>
+                      setNewFounderData({ ...newFounderData, role: e.target.value })
+                    }
+                    className="w-full px-3 py-2 text-sm bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                  />
+                </div>
               </div>
 
               <div>
                 <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Label Title (Headline) *
+                  Founder Story / Mission Quote
                 </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Students Empowered"
-                  value={newMetricData.label}
+                <textarea
+                  rows={3}
+                  placeholder="e.g. We started SMARTKITAB with a clear vision: every student in Nepal deserves access to quality books without the heavy financial burden."
+                  value={newFounderData.quote}
                   onChange={(e) =>
-                    setNewMetricData({ ...newMetricData, label: e.target.value })
-                  }
-                  className="w-full px-3 py-2 text-sm bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                  Subtext / Context Description
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Across Kathmandu, Pokhara & Chitwan"
-                  value={newMetricData.subtext}
-                  onChange={(e) =>
-                    setNewMetricData({ ...newMetricData, subtext: e.target.value })
+                    setNewFounderData({ ...newFounderData, quote: e.target.value })
                   }
                   className="w-full px-3 py-2 text-xs bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
                 />
               </div>
 
-              <div>
-                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-2">
-                  Select Display Icon
-                </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {[
-                    { name: 'BookOpen', label: 'Books' },
-                    { name: 'Users', label: 'Students' },
-                    { name: 'Recycle', label: 'Circular' },
-                    { name: 'Heart', label: 'Trees/Love' },
-                    { name: 'DollarSign', label: 'Money' },
-                    { name: 'TrendingUp', label: 'Growth' },
-                    { name: 'Award', label: 'Award' },
-                    { name: 'Sparkles', label: 'Perks' },
-                  ].map((ic) => {
-                    const IconC = ICON_MAP[ic.name] || BookOpen;
-                    const isSelected = newMetricData.icon === ic.name;
-                    return (
-                      <button
-                        key={ic.name}
-                        type="button"
-                        onClick={() =>
-                          setNewMetricData({ ...newMetricData, icon: ic.name })
-                        }
-                        className={`flex flex-col items-center gap-1 p-2 rounded-xl border text-center transition cursor-pointer ${
-                          isSelected
-                            ? 'bg-[#795238] text-white border-[#795238] shadow-xs'
-                            : 'bg-[#FAF6EF]/40 text-stone-700 border-stone-200 hover:bg-stone-100'
-                        }`}
-                      >
-                        <IconC className="w-5 h-5" />
-                        <span className="text-[10px] font-bold truncate w-full">
-                          {ic.label}
-                        </span>
-                      </button>
-                    );
-                  })}
+              <div className="p-4 rounded-2xl bg-[#FAF6EF] border border-[#795238]/15 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#795238] uppercase tracking-wider">
+                    Profile Photo Settings
+                  </span>
+                  <label className="flex items-center gap-1.5 cursor-pointer bg-white px-2.5 py-1 rounded-lg border border-stone-200">
+                    <input
+                      type="checkbox"
+                      checked={newFounderData.showImage}
+                      onChange={(e) =>
+                        setNewFounderData({
+                          ...newFounderData,
+                          showImage: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 accent-[#795238] rounded cursor-pointer"
+                    />
+                    <span className="text-xs font-bold text-stone-800">Show Photo</span>
+                  </label>
                 </div>
+
+                {newFounderData.showImage ? (
+                  <div>
+                    <label className="block text-[10px] font-bold text-stone-600 mb-1">
+                      Photo Image URL
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://images.unsplash.com/photo-..."
+                      value={newFounderData.imageUrl}
+                      onChange={(e) =>
+                        setNewFounderData({
+                          ...newFounderData,
+                          imageUrl: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 text-xs bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-stone-500 italic">
+                    Photo disabled: Will display initials avatar badge.
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setNewMetricModalOpen(false)}
+                  onClick={() => setNewFounderModalOpen(false)}
                   className="px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs cursor-pointer transition"
                 >
                   Cancel
@@ -5647,7 +5711,146 @@ export default function AdminDashboard() {
                   className="px-5 py-2 rounded-xl bg-[#795238] hover:bg-[#633f27] text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition shadow-md"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Add Metric Card</span>
+                  <span>Add Founder</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= EDIT FOUNDER / CO-FOUNDER MODAL ================= */}
+      {editFounderModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl border border-[#795238]/20 max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setEditFounderModalOpen(false)}
+              className="absolute top-5 right-5 p-1.5 rounded-full hover:bg-stone-100 text-stone-500 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 text-xs font-bold text-[#795238] bg-[#FAF6EF] px-3 py-1 rounded-full w-fit">
+              <Edit3 className="w-4 h-4 text-[#795238]" />
+              <span>Edit Founder / Co-Founder</span>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-black text-stone-900">
+                Edit Founder Details
+              </h3>
+              <p className="text-xs text-stone-600 mt-0.5">
+                Update name, title/role, mission quote story, and photo visibility.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveEditFounder} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                    Founder Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editFounderData.name}
+                    onChange={(e) =>
+                      setEditFounderData({ ...editFounderData, name: e.target.value })
+                    }
+                    className="w-full px-3 py-2 text-sm font-bold text-stone-900 bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                    Role / Position *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editFounderData.role}
+                    onChange={(e) =>
+                      setEditFounderData({ ...editFounderData, role: e.target.value })
+                    }
+                    className="w-full px-3 py-2 text-sm bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Founder Story / Mission Quote
+                </label>
+                <textarea
+                  rows={3}
+                  value={editFounderData.quote}
+                  onChange={(e) =>
+                    setEditFounderData({ ...editFounderData, quote: e.target.value })
+                  }
+                  className="w-full px-3 py-2 text-xs bg-[#FAF6EF]/50 border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                />
+              </div>
+
+              <div className="p-4 rounded-2xl bg-[#FAF6EF] border border-[#795238]/15 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#795238] uppercase tracking-wider">
+                    Profile Photo Settings
+                  </span>
+                  <label className="flex items-center gap-1.5 cursor-pointer bg-white px-2.5 py-1 rounded-lg border border-stone-200">
+                    <input
+                      type="checkbox"
+                      checked={editFounderData.showImage}
+                      onChange={(e) =>
+                        setEditFounderData({
+                          ...editFounderData,
+                          showImage: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 accent-[#795238] rounded cursor-pointer"
+                    />
+                    <span className="text-xs font-bold text-stone-800">Show Photo</span>
+                  </label>
+                </div>
+
+                {editFounderData.showImage ? (
+                  <div>
+                    <label className="block text-[10px] font-bold text-stone-600 mb-1">
+                      Photo Image URL
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://images.unsplash.com/photo-..."
+                      value={editFounderData.imageUrl}
+                      onChange={(e) =>
+                        setEditFounderData({
+                          ...editFounderData,
+                          imageUrl: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 text-xs bg-white border border-[#795238]/20 rounded-xl focus:outline-none focus:border-[#795238]"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-stone-500 italic">
+                    Photo disabled: Will display initials avatar badge.
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditFounderModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs cursor-pointer transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-[#795238] hover:bg-[#633f27] text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition shadow-md"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Update Founder</span>
                 </button>
               </div>
             </form>

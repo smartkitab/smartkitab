@@ -16,6 +16,7 @@ import {
   Heart,
   Shield,
   User,
+  Crown,
 } from 'lucide-react';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 
@@ -40,37 +41,60 @@ export default function BookCycleBanner({
 }) {
   const { settings } = useSiteSettings();
   const bookCycle = settings?.bookCycle || {};
-  const founder = bookCycle.founder || {};
 
-  const rawFacilities = bookCycle.facilities && bookCycle.facilities.length > 0
-    ? bookCycle.facilities
-    : [
-        { id: 'fac_1', title: 'Printed Notes', desc: 'Curriculum & syllabus guides', icon: 'FileText', isVisible: true, displayOrder: 1 },
-        { id: 'fac_2', title: 'Handwritten Notes', desc: 'Topper study summaries', icon: 'Sparkles', isVisible: true, displayOrder: 2 },
-        { id: 'fac_3', title: 'Free BookCycle', desc: 'Read & rotate indefinitely', icon: 'RefreshCw', isVisible: true, displayOrder: 3 },
-        { id: 'fac_4', title: 'Book Requests', desc: 'Sourced within 48 hours', icon: 'Clock', isVisible: true, displayOrder: 4 },
-        { id: 'fac_5', title: 'Home Delivery', desc: 'Everywhere in Nepal', icon: 'Truck', isVisible: true, displayOrder: 5 },
-      ];
+  const rawFacilities =
+    bookCycle.facilities && bookCycle.facilities.length > 0
+      ? bookCycle.facilities
+      : [
+          { id: 'fac_1', title: 'Printed Notes', desc: 'Curriculum & syllabus guides', icon: 'FileText', isVisible: true, displayOrder: 1 },
+          { id: 'fac_2', title: 'Handwritten Notes', desc: 'Topper study summaries', icon: 'Sparkles', isVisible: true, displayOrder: 2 },
+          { id: 'fac_3', title: 'Free BookCycle', desc: 'Read & rotate indefinitely', icon: 'RefreshCw', isVisible: true, displayOrder: 3 },
+          { id: 'fac_4', title: 'Book Requests', desc: 'Sourced within 48 hours', icon: 'Clock', isVisible: true, displayOrder: 4 },
+          { id: 'fac_5', title: 'Home Delivery', desc: 'Everywhere in Nepal', icon: 'Truck', isVisible: true, displayOrder: 5 },
+        ];
 
   const displayFacilities = rawFacilities
     .filter((f) => f.isVisible !== false)
     .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
 
-  const features = bookCycle.features && bookCycle.features.length > 0
-    ? bookCycle.features
-    : [
-        'Unlimited BookCycle',
-        'Free Delivery on exchanges',
-        'Priority Requests for rare titles',
-        'Exclusive Discounts on purchases',
-      ];
+  const features =
+    bookCycle.features && bookCycle.features.length > 0
+      ? bookCycle.features
+      : [
+          'Unlimited BookCycle',
+          'Free Delivery on exchanges',
+          'Priority Requests for rare titles',
+          'Exclusive Discounts on purchases',
+        ];
 
-  const showFounderPhoto = founder.showImage !== false && founder.imageUrl && founder.imageUrl.trim().length > 0;
+  // Founders & Co-Founders list
+  const defaultFounder = {
+    id: 'fnd_1',
+    name: 'Shraddha',
+    role: 'Founder & Community Lead',
+    quote:
+      "Hi, I'm Shraddha! I founded SMARTKITAB because I watched countless fellow students spend a fortune on semester textbooks they only needed for a few months. Our mission is to make reading and education universally affordable across Nepal by giving every book a second home.",
+    imageUrl:
+      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=240&h=240&q=80',
+    showImage: true,
+    isVisible: true,
+    displayOrder: 1,
+  };
+
+  const rawFounders =
+    bookCycle.founders && bookCycle.founders.length > 0
+      ? bookCycle.founders
+      : bookCycle.founder
+      ? [{ ...bookCycle.founder, id: 'fnd_1', isVisible: true, displayOrder: 1 }]
+      : [defaultFounder];
+
+  const displayFounders = rawFounders
+    .filter((f) => f.isVisible !== false)
+    .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
 
   return (
     <section className="bg-cream-bg py-12 sm:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
         {/* Section Heading */}
         <div className="text-center max-w-2xl mx-auto mb-10">
           <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-dark-green bg-emerald-100/60 border border-emerald-300/60 px-3 py-1 rounded-full mb-2">
@@ -87,12 +111,10 @@ export default function BookCycleBanner({
 
         {/* 3-Column Responsive Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-          
           {/* 1. LEFT COLUMN: BookCycle Membership Box */}
           <div className="lg:col-span-4 bg-gradient-to-br from-primary-brown via-[#6c4830] to-[#4e311f] text-cream-bg rounded-3xl p-7 shadow-xl flex flex-col justify-between relative overflow-hidden border-2 border-primary-brown">
-            {/* Background ambient lighting */}
             <div className="absolute -top-10 -right-10 w-44 h-44 bg-accent-coral/20 rounded-full blur-2xl pointer-events-none" />
-            
+
             <div>
               <div className="inline-flex items-center gap-1.5 bg-accent-coral text-white text-xs font-extrabold px-3.5 py-1 rounded-full uppercase tracking-wider shadow-sm mb-4">
                 <RefreshCw className="w-3.5 h-3.5 animate-spin duration-3000" />
@@ -144,7 +166,6 @@ export default function BookCycleBanner({
 
           {/* 2. MIDDLE COLUMN: Our Facilities & Smart Gifting */}
           <div className="lg:col-span-4 flex flex-col gap-6 justify-between">
-            
             {/* Our Facilities List Card */}
             <div className="bg-light-cream/80 border border-primary-brown/15 rounded-3xl p-6 shadow-sm flex-1 flex flex-col justify-between">
               <div>
@@ -208,13 +229,12 @@ export default function BookCycleBanner({
                 Send Gift
               </button>
             </div>
-
           </div>
 
-          {/* 3. RIGHT COLUMN: Meet the Founder / Mission & Story Card */}
-          <div className="lg:col-span-4 bg-white border border-primary-brown/15 rounded-3xl p-7 shadow-sm flex flex-col justify-between">
+          {/* 3. RIGHT COLUMN: Meet the Founders / Mission & Story Card */}
+          <div className="lg:col-span-4 bg-white border border-primary-brown/15 rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center justify-between mb-4">
                 <div>
                   <span className="text-xs font-bold uppercase tracking-wider text-stone-500 block">
                     {bookCycle.missionTitle || 'Our Mission & Story'}
@@ -228,64 +248,91 @@ export default function BookCycleBanner({
                 <Quote className="w-6 h-6 text-primary-brown/25 shrink-0" />
               </div>
 
-              {/* Founder Profile Avatar / Badge */}
-              <div className="flex items-center gap-4 mb-5">
-                {showFounderPhoto ? (
-                  <div className="relative">
-                    <img
-                      src={founder.imageUrl}
-                      alt={`${founder.name || 'Shraddha'} - Founder of SMARTKITAB`}
-                      className="w-16 h-16 rounded-2xl object-cover border-2 border-primary-brown/20 shadow-md"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        if (e.target.nextSibling) {
-                          e.target.nextSibling.style.display = 'flex';
-                        }
-                      }}
-                    />
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-dark-green text-white rounded-full flex items-center justify-center border-2 border-white text-xs">
-                      ✓
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-brown to-stone-800 text-white flex items-center justify-center shadow-md border-2 border-primary-brown/20 shrink-0">
-                    <User className="w-8 h-8 text-amber-200" />
-                  </div>
-                )}
-                <div>
-                  <h4 className="text-base sm:text-lg font-black text-primary-brown">
-                    {founder.name || 'Shraddha'}
-                  </h4>
-                  <p className="text-sm text-stone-500 font-medium">
-                    {founder.role || 'Founder & Community Lead'}
-                  </p>
-                  <span className="text-xs text-accent-coral font-bold mt-0.5 inline-block">
-                    SMARTKITAB Nepal
-                  </span>
-                </div>
-              </div>
+              {/* Founders List */}
+              <div className="space-y-4 max-h-[380px] overflow-y-auto pr-1">
+                {displayFounders.map((fnd, idx) => {
+                  const showPhoto = fnd.showImage !== false && fnd.imageUrl && fnd.imageUrl.trim().length > 0;
+                  const initials = (fnd.name || 'F')
+                    .split(' ')
+                    .map((n) => n[0])
+                    .join('')
+                    .substring(0, 2)
+                    .toUpperCase();
 
-              {/* Bio Quote */}
-              <div className="relative bg-light-cream/40 p-4 rounded-2xl border border-primary-brown/10 text-stone-700 text-sm sm:text-base italic leading-relaxed">
-                &ldquo;{founder.quote ||
-                  "Hi, I'm Shraddha! I founded SMARTKITAB because I watched countless fellow students spend a fortune on semester textbooks they only needed for a few months. Our mission is to make reading and education universally affordable across Nepal by giving every book a second home."}&rdquo;
+                  return (
+                    <div
+                      key={fnd.id || idx}
+                      className="p-4 rounded-2xl bg-light-cream/40 border border-primary-brown/10 space-y-3 shadow-2xs hover:bg-light-cream/60 transition"
+                    >
+                      {/* Founder Profile Avatar / Badge */}
+                      <div className="flex items-center gap-3.5">
+                        {showPhoto ? (
+                          <div className="relative shrink-0">
+                            <img
+                              src={fnd.imageUrl}
+                              alt={`${fnd.name || 'Founder'} - SMARTKITAB`}
+                              className="w-13 h-13 rounded-2xl object-cover border-2 border-primary-brown/20 shadow-md"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                if (e.target.nextSibling) {
+                                  e.target.nextSibling.style.display = 'flex';
+                                }
+                              }}
+                            />
+                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-dark-green text-white rounded-full flex items-center justify-center border border-white text-[9px] font-bold">
+                              ✓
+                            </div>
+                          </div>
+                        ) : null}
+
+                        <div
+                          className={`w-13 h-13 rounded-2xl bg-gradient-to-br from-primary-brown to-stone-800 text-white flex items-center justify-center font-black text-sm shadow-md border-2 border-primary-brown/20 shrink-0 ${
+                            showPhoto ? 'hidden' : 'flex'
+                          }`}
+                        >
+                          {initials}
+                        </div>
+
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <h4 className="text-sm sm:text-base font-black text-primary-brown truncate">
+                              {fnd.name || 'Founder'}
+                            </h4>
+                            <Crown className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                          </div>
+                          <p className="text-xs text-stone-500 font-medium truncate">
+                            {fnd.role || 'Co-Founder'}
+                          </p>
+                          <span className="text-[10px] text-accent-coral font-bold inline-block">
+                            SMARTKITAB Nepal
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Bio Quote */}
+                      {fnd.quote && (
+                        <p className="text-stone-700 text-xs sm:text-[13px] italic leading-relaxed">
+                          &ldquo;{fnd.quote}&rdquo;
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
             <div className="mt-6 pt-4 border-t border-light-cream">
               <button
                 onClick={onKnowMoreClick}
-                className="w-full py-2.5 px-4 rounded-xl border border-primary-brown text-primary-brown hover:bg-light-cream active:scale-[0.98] font-bold text-sm sm:text-base inline-flex items-center justify-center gap-2 transition duration-150 cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-xl border border-primary-brown text-primary-brown hover:bg-light-cream active:scale-[0.98] font-bold text-xs sm:text-sm inline-flex items-center justify-center gap-2 transition duration-150 cursor-pointer"
               >
                 <span>Know More About Our Story</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
-
         </div>
       </div>
     </section>
   );
 }
-
