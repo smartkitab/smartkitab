@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import MetricsBar from './components/MetricsBar';
@@ -26,6 +27,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import BuyerDashboard from './pages/BuyerDashboard';
 import SellerDashboard from './pages/SellerDashboard';
 import AuthPage from './pages/AuthPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 import InfoPage from './pages/InfoPage';
 
 // HomePage storefront view
@@ -250,9 +252,10 @@ function AppContent() {
           <Route path="/terms" element={<InfoPage initialTab="terms" />} />
           <Route path="/privacy" element={<InfoPage initialTab="privacy" />} />
 
-          {/* Authentication Routes */}
+          {/* Authentication & Verification Routes */}
           <Route path="/login" element={<AuthPage initialMode="login" />} />
           <Route path="/register" element={<AuthPage initialMode="register" />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
 
           {/* Protected Admin Route */}
           <Route
@@ -275,19 +278,23 @@ function AppContent() {
   );
 }
 
-// Export Root App wrapped in BrowserRouter, AuthProvider, CartProvider, and SiteSettingsProvider
+// Export Root App wrapped in GoogleOAuthProvider, BrowserRouter, AuthProvider, CartProvider, and SiteSettingsProvider
 export default function App() {
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'dummy-google-client-id';
+
   return (
     <ErrorBoundary>
-      <BrowserRouter>
-        <AuthProvider>
-          <CartProvider>
-            <SiteSettingsProvider>
-              <AppContent />
-            </SiteSettingsProvider>
-          </CartProvider>
-        </AuthProvider>
-      </BrowserRouter>
+      <GoogleOAuthProvider clientId={googleClientId}>
+        <BrowserRouter>
+          <AuthProvider>
+            <CartProvider>
+              <SiteSettingsProvider>
+                <AppContent />
+              </SiteSettingsProvider>
+            </CartProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </GoogleOAuthProvider>
     </ErrorBoundary>
   );
 }
