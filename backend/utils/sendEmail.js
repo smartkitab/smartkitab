@@ -4,14 +4,18 @@ import nodemailer from 'nodemailer';
  * Creates and returns a Nodemailer transporter instance
  */
 const createTransporter = () => {
-  const emailUser = process.env.EMAIL_USER || process.env.GMAIL_USER;
-  const emailPass = process.env.EMAIL_PASS || process.env.GMAIL_APP_PASSWORD;
+  const rawEmailUser = process.env.EMAIL_USER || process.env.GMAIL_USER;
+  const rawEmailPass = process.env.EMAIL_PASS || process.env.GMAIL_APP_PASSWORD;
 
-  if (!emailUser || !emailPass) {
+  if (!rawEmailUser || !rawEmailPass) {
     return null;
   }
 
-  // If host is explicitly specified (e.g., custom SMTP or Sendgrid)
+  const emailUser = rawEmailUser.trim();
+  // Strip any accidental spaces from Google 16-character App Passwords
+  const emailPass = rawEmailPass.replace(/\s+/g, '').trim();
+
+  // If custom host is explicitly specified
   if (process.env.EMAIL_HOST) {
     return nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
@@ -40,7 +44,9 @@ const createTransporter = () => {
 export const sendVerificationEmail = async ({ to, name, verificationToken, role }) => {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
   const verificationUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
-  const senderAddress = process.env.EMAIL_FROM || `"SMARTKITAB" <${process.env.EMAIL_USER || 'support@smartkitab.com'}>`;
+  const senderAddress =
+    process.env.EMAIL_FROM ||
+    `"SMARTKITAB" <${process.env.EMAIL_USER || 'support@smartkitab.com'}>`;
 
   const roleLabel = role === 'seller' ? 'Seller & Donor' : 'Student & Reader';
 
@@ -128,7 +134,6 @@ export const sendVerificationEmail = async ({ to, name, verificationToken, role 
     return { success: true, messageId: info.messageId, verificationUrl };
   } catch (err) {
     console.error(`Failed to send verification email to ${to}:`, err.message);
-    // Return simulated info so user flow does not crash
     return { success: false, error: err.message, verificationUrl };
   }
 };
