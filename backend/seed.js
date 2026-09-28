@@ -118,7 +118,6 @@ async function seedDatabase() {
         email: 'admin@smartkitab.com',
         password: hashedPassword,
         role: 'admin',
-        isVerified: true,
         isBookCycleSubscriber: true,
         address: {
           street: 'Putalisadak',
@@ -131,7 +130,6 @@ async function seedDatabase() {
         email: 'seller@smartkitab.com',
         password: hashedPassword,
         role: 'seller',
-        isVerified: true,
         isBookCycleSubscriber: false,
         address: {
           street: 'New Road',
@@ -144,7 +142,6 @@ async function seedDatabase() {
         email: 'buyer@smartkitab.com',
         password: hashedPassword,
         role: 'buyer',
-        isVerified: true,
         isBookCycleSubscriber: false,
         address: {
           street: 'Baneshwor',

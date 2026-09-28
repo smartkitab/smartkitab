@@ -48,6 +48,7 @@ export function AuthProvider({ children }) {
           }
         } catch (err) {
           console.warn('Session verification failed, logging out:', err.response?.data?.message || err.message);
+          // If token is invalid or expired, clear auth
           setToken(null);
           setUser(null);
           delete axios.defaults.headers.common['Authorization'];
@@ -71,9 +72,8 @@ export function AuthProvider({ children }) {
 
       return { success: true, user: userData };
     } catch (err) {
-      const isUnverified = err.response?.data?.isUnverified || false;
       const message = err.response?.data?.message || 'Login failed. Please check your credentials.';
-      return { success: false, message, isUnverified, email };
+      return { success: false, message };
     }
   };
 
@@ -81,81 +81,15 @@ export function AuthProvider({ children }) {
   const register = async (userData) => {
     try {
       const res = await axios.post('/api/auth/register', userData);
-      
-      // If email verification is required (standard buyer/seller registration)
-      if (res.data?.requiresVerification) {
-        return {
-          success: true,
-          requiresVerification: true,
-          message: res.data.message,
-          email: res.data.email,
-          verificationUrl: res.data.verificationUrl,
-        };
-      }
-
-      // If backend logged in directly (e.g. admin or pre-verified)
-      if (res.data?.token) {
-        const { token: newToken, user: newUser } = res.data;
-        setToken(newToken);
-        setUser(newUser);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-        return { success: true, user: newUser };
-      }
-
-      return { success: true, message: res.data.message };
-    } catch (err) {
-      const message = err.response?.data?.message || 'Registration failed. Please try again.';
-      return { success: false, message };
-    }
-  };
-
-  // Verify Email handler (via token link)
-  const verifyEmail = async (verificationToken) => {
-    try {
-      const res = await axios.post('/api/auth/verify-email', { token: verificationToken });
-      const { token: newToken, user: userData } = res.data;
-
-      if (newToken && userData) {
-        setToken(newToken);
-        setUser(userData);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-      }
-
-      return { success: true, message: res.data.message, user: userData };
-    } catch (err) {
-      const message = err.response?.data?.message || 'Verification failed. Link may be invalid or expired.';
-      return { success: false, message };
-    }
-  };
-
-  // Resend Verification Email handler
-  const resendVerification = async (email) => {
-    try {
-      const res = await axios.post('/api/auth/resend-verification', { email });
-      return {
-        success: true,
-        message: res.data.message,
-        verificationUrl: res.data.verificationUrl,
-      };
-    } catch (err) {
-      const message = err.response?.data?.message || 'Failed to resend verification link.';
-      return { success: false, message };
-    }
-  };
-
-  // Google Direct Sign-In / Register handler
-  const loginWithGoogle = async (credential, role = 'buyer') => {
-    try {
-      const res = await axios.post('/api/auth/google', { credential, role });
-      const { token: newToken, user: userData } = res.data;
+      const { token: newToken, user: newUser } = res.data;
 
       setToken(newToken);
-      setUser(userData);
+      setUser(newUser);
       axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
 
-      return { success: true, user: userData };
+      return { success: true, user: newUser };
     } catch (err) {
-      const message = err.response?.data?.message || 'Google Sign-In failed. Please try again.';
+      const message = err.response?.data?.message || 'Registration failed. Please try again.';
       return { success: false, message };
     }
   };
@@ -201,9 +135,6 @@ export function AuthProvider({ children }) {
     loading,
     login,
     register,
-    verifyEmail,
-    resendVerification,
-    loginWithGoogle,
     logout,
     updateUserProfile,
     refreshUser,
@@ -224,3 +155,4 @@ export function useAuth() {
 }
 
 export default AuthContext;
+

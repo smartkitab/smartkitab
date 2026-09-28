@@ -41,9 +41,7 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: function () {
-        return this.authProvider === 'local';
-      },
+      required: [true, 'Password is required'],
       minlength: [6, 'Password must be at least 6 characters long'],
     },
     role: {
@@ -53,32 +51,6 @@ const userSchema = new mongoose.Schema(
         message: '{VALUE} is not a valid role',
       },
       default: 'buyer',
-    },
-    authProvider: {
-      type: String,
-      enum: ['local', 'google'],
-      default: 'local',
-    },
-    googleId: {
-      type: String,
-      default: null,
-    },
-    avatar: {
-      type: String,
-      default: '',
-    },
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
-    verificationToken: {
-      type: String,
-      default: null,
-      index: true,
-    },
-    verificationTokenExpires: {
-      type: Date,
-      default: null,
     },
     permissions: {
       canManageBooks: { type: Boolean, default: true },
@@ -111,3 +83,4 @@ const userSchema = new mongoose.Schema(
 const User = mongoose.model('User', userSchema);
 
 export default User;
+
