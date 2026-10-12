@@ -160,16 +160,35 @@ export default function CatalogPage({ onAddToCart = () => {} }) {
 
         const res = await axios.get(`/api/books?${params.toString()}`);
         if (isMounted) {
-          if (res.data?.books && res.data.books.length > 0) {
-            setBooks(res.data.books);
+          const hasActiveFilters = Boolean(
+            selectedCategories.length > 0 ||
+            selectedCondition ||
+            searchQuery.trim() ||
+            maxPrice < 2000
+          );
+
+          if (Array.isArray(res.data?.books)) {
+            if (res.data.books.length > 0) {
+              setBooks(res.data.books);
+            } else if (hasActiveFilters) {
+              // When user searches or filters and there are no matches, show empty state
+              setBooks([]);
+            } else {
+              setBooks(fallbackBooks);
+            }
           } else {
-            // If backend has no matching entries or empty seed, use fallback
-            setBooks(fallbackBooks);
+            setBooks(hasActiveFilters ? [] : fallbackBooks);
           }
         }
       } catch (err) {
-        console.warn('Failed to load books from backend, using fallback data:', err.message);
-        if (isMounted) setBooks(fallbackBooks);
+        console.warn('Failed to load books from backend:', err.message);
+        const hasActiveFilters = Boolean(
+          selectedCategories.length > 0 ||
+          selectedCondition ||
+          searchQuery.trim() ||
+          maxPrice < 2000
+        );
+        if (isMounted) setBooks(hasActiveFilters ? [] : fallbackBooks);
       } finally {
         if (isMounted) setLoading(false);
       }

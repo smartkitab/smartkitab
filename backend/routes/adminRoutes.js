@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   getPendingBooks,
   getAdminStats,
+  getAllUsers,
   getStaffUsers,
   createStaffUser,
   updateStaffPermissions,
@@ -19,6 +20,9 @@ router.use(verifyToken, isAdmin);
 
 // Overview & Analytics
 router.get('/stats', getAdminStats);
+
+// User Management
+router.get('/users', requirePermission('canManageUsers'), getAllUsers);
 
 // Books Management
 router.get('/pending-books', requirePermission('canManageBooks'), getPendingBooks);
