@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import {
   Search,
@@ -8,7 +8,6 @@ import {
   X,
   ChevronDown,
   BookOpen,
-  ArrowUpDown,
   Filter,
 } from 'lucide-react';
 import BookCard from '../components/BookCard';
@@ -100,11 +99,14 @@ const fallbackBooks = [
 
 export default function CatalogPage({ onAddToCart = () => {} }) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { settings } = useSiteSettings();
 
   const dynamicCategories = useMemo(() => {
-    if (settings?.categories && settings.categories.length > 0) {
-      return settings.categories
+    const cats = settings?.categories;
+    if (cats && cats.length > 0) {
+      return cats
         .filter((c) => c.isVisible !== false)
         .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
         .map((c) => c.name);
@@ -135,7 +137,7 @@ export default function CatalogPage({ onAddToCart = () => {} }) {
     if (cat && !selectedCategories.includes(cat)) {
       setSelectedCategories([cat]);
     }
-  }, [searchParams]);
+  }, [searchParams, selectedCategories]);
 
   // Fetch Books from Backend
   useEffect(() => {
@@ -160,35 +162,16 @@ export default function CatalogPage({ onAddToCart = () => {} }) {
 
         const res = await axios.get(`/api/books?${params.toString()}`);
         if (isMounted) {
-          const hasActiveFilters = Boolean(
-            selectedCategories.length > 0 ||
-            selectedCondition ||
-            searchQuery.trim() ||
-            maxPrice < 2000
-          );
-
-          if (Array.isArray(res.data?.books)) {
-            if (res.data.books.length > 0) {
-              setBooks(res.data.books);
-            } else if (hasActiveFilters) {
-              // When user searches or filters and there are no matches, show empty state
-              setBooks([]);
-            } else {
-              setBooks(fallbackBooks);
-            }
+          if (res.data?.books && res.data.books.length > 0) {
+            setBooks(res.data.books);
           } else {
-            setBooks(hasActiveFilters ? [] : fallbackBooks);
+            // If backend has no matching entries or empty seed, use fallback
+            setBooks(fallbackBooks);
           }
         }
       } catch (err) {
-        console.warn('Failed to load books from backend:', err.message);
-        const hasActiveFilters = Boolean(
-          selectedCategories.length > 0 ||
-          selectedCondition ||
-          searchQuery.trim() ||
-          maxPrice < 2000
-        );
-        if (isMounted) setBooks(hasActiveFilters ? [] : fallbackBooks);
+        console.warn('Failed to load books from backend, using fallback data:', err.message);
+        if (isMounted) setBooks(fallbackBooks);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -215,6 +198,42 @@ export default function CatalogPage({ onAddToCart = () => {} }) {
     setMaxPrice(2000);
     setSearchQuery('');
     setSearchParams({});
+    setRequestSubmitted(false);
+  };
+
+  const [requestSubmitted, setRequestSubmitted] = useState(false);
+  const [requestLoading, setRequestLoading] = useState(false);
+  const [requestError, setRequestError] = useState('');
+
+  const handleRequestBook = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login', {
+        state: {
+          from: location,
+          message: 'Please log in to submit a book request.',
+        },
+      });
+      return;
+    }
+    const bookTitle = searchQuery.trim() || selectedCategories[0] || 'Requested Book';
+    setRequestLoading(true);
+    setRequestError('');
+    try {
+      await axios.post(
+        '/api/books/requests',
+        {
+          title: bookTitle,
+          category: selectedCategories[0] || 'General',
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setRequestSubmitted(true);
+    } catch (err) {
+      setRequestError(err.response?.data?.message || 'Failed to submit request');
+    } finally {
+      setRequestLoading(false);
+    }
   };
 
   // Filter & Sort Logic (Client-side refinement)
@@ -502,12 +521,33 @@ export default function CatalogPage({ onAddToCart = () => {} }) {
                 <p className="text-sm text-stone-600 max-w-sm mx-auto">
                   Try adjusting your category filter, resetting price limits, or searching with another keyword.
                 </p>
-                <button
-                  onClick={clearFilters}
-                  className="px-5 py-2.5 rounded-xl bg-primary-brown text-white text-sm font-bold shadow hover:bg-[#603f29] transition cursor-pointer"
-                >
-                  Reset All Filters
-                </button>
+
+                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                  <button
+                    onClick={clearFilters}
+                    className="px-5 py-2.5 rounded-xl bg-primary-brown text-white text-sm font-bold shadow hover:bg-[#603f29] transition cursor-pointer"
+                  >
+                    Reset All Filters
+                  </button>
+
+                  {!requestSubmitted ? (
+                    <button
+                      onClick={handleRequestBook}
+                      disabled={requestLoading}
+                      className="px-5 py-2.5 rounded-xl bg-light-cream text-primary-brown border border-primary-brown/30 text-sm font-bold hover:bg-[#FAF6EF] transition cursor-pointer disabled:opacity-50"
+                    >
+                      {requestLoading ? 'Submitting Request...' : `Request "${searchQuery.trim() || 'This Book'}"`}
+                    </button>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold">
+                      ✓ Request recorded! Sellers will be notified.
+                    </span>
+                  )}
+                </div>
+
+                {requestError && (
+                  <p className="text-xs font-bold text-rose-600 mt-2">{requestError}</p>
+                )}
               </div>
             )}
 

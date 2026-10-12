@@ -29,7 +29,3 @@ pnpm-debug.log*
 .idea/
 .DS_Store
 Thumbs.db
-
-# Uploaded User Media
-backend/uploads/
-uploads/

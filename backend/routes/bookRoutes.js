@@ -8,6 +8,9 @@ import {
   getSellerListings,
   updateSellerBook,
   deleteSellerBook,
+  createBookRequest,
+  getAllBookRequests,
+  getMyBookRequests,
 } from '../controllers/bookController.js';
 import { verifyToken, isAdmin } from '../middleware/auth.js';
 
@@ -15,6 +18,11 @@ const router = Router();
 
 // Public routes
 router.get('/', getAllBooks);
+
+// Book Requests (must precede /:id)
+router.get('/requests', getAllBookRequests);
+router.get('/requests/my', verifyToken, getMyBookRequests);
+router.post('/requests', verifyToken, createBookRequest);
 
 // Seller authenticated routes (must precede /:id to avoid treating "seller" as an ID)
 router.get('/seller/my-listings', verifyToken, getSellerListings);

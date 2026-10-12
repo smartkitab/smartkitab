@@ -25,32 +25,17 @@ export const getPendingBooks = async (req, res) => {
 
 export const getAdminStats = async (req, res) => {
   try {
-    const [
-      totalUsers,
-      totalBooks,
-      pendingApprovals,
-      salesAggregation,
-      paidSalesAggregation,
-      totalOrders,
-    ] = await Promise.all([
+    const [totalUsers, totalBooks, pendingApprovals, salesAggregation] = await Promise.all([
       User.countDocuments(),
       Book.countDocuments(),
       Book.countDocuments({ status: 'pending' }),
-      // Non-cancelled orders represent real active sales volume
-      Order.aggregate([
-        { $match: { orderStatus: { $ne: 'cancelled' } } },
-        { $group: { _id: null, total: { $sum: '$totalAmount' } } },
-      ]),
-      // Realized paid revenue
       Order.aggregate([
         { $match: { paymentStatus: 'completed' } },
         { $group: { _id: null, total: { $sum: '$totalAmount' } } },
       ]),
-      Order.countDocuments({ orderStatus: { $ne: 'cancelled' } }),
     ]);
 
     const totalSales = salesAggregation.length > 0 ? salesAggregation[0].total : 0;
-    const paidSales = paidSalesAggregation.length > 0 ? paidSalesAggregation[0].total : 0;
 
     return res.status(200).json({
       success: true,
@@ -58,8 +43,6 @@ export const getAdminStats = async (req, res) => {
         totalUsers,
         totalBooks,
         totalSales,
-        paidSales,
-        totalOrders,
         pendingApprovals,
       },
     });
@@ -67,26 +50,6 @@ export const getAdminStats = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Failed to retrieve admin statistics',
-      error: error.message,
-    });
-  }
-};
-
-export const getAllUsers = async (req, res) => {
-  try {
-    const users = await User.find({})
-      .select('-password')
-      .sort({ createdAt: -1 });
-
-    return res.status(200).json({
-      success: true,
-      count: users.length,
-      users,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to retrieve platform users',
       error: error.message,
     });
   }

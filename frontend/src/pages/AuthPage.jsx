@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import axios from 'axios';
 import {
-  BookOpen,
   Mail,
   Lock,
   User,
   Phone,
   MapPin,
   ArrowRight,
-  ShieldCheck,
   AlertCircle,
   Loader2,
   CheckCircle2,
   RefreshCw,
   Sparkles,
   ExternalLink,
+  KeyRound,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import GoogleAuthButton from '../components/GoogleAuthButton';
@@ -24,22 +24,92 @@ export default function AuthPage({ initialMode = 'login' }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Mode: 'login' | 'register'
+  // Mode: 'login' | 'register' | 'forgot' | 'reset'
+  const searchParams = new URLSearchParams(location.search);
+  const resetToken = searchParams.get('resetToken');
+
   const isRegisterRoute = location.pathname === '/register' || initialMode === 'register';
-  const [mode, setMode] = useState(isRegisterRoute ? 'register' : 'login');
+  const [mode, setMode] = useState(() => {
+    if (resetToken) return 'reset';
+    return isRegisterRoute ? 'register' : 'login';
+  });
 
   useEffect(() => {
-    setMode(location.pathname === '/register' ? 'register' : 'login');
-  }, [location.pathname]);
+    if (resetToken) {
+      setMode('reset');
+    } else if (location.pathname === '/register') {
+      setMode('register');
+    } else if (location.pathname === '/login') {
+      setMode((prev) => (prev === 'forgot' ? 'forgot' : 'login'));
+    }
+  }, [location.pathname, resetToken]);
 
-  const getRedirectDestination = (userRole) => {
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSuccess, setForgotSuccess] = useState(null);
+
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(null);
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!forgotEmail || !forgotEmail.trim()) {
+      setError('Please provide your account email address.');
+      return;
+    }
+    setForgotLoading(true);
+    setError(null);
+    setForgotSuccess(null);
+    try {
+      const res = await axios.post('/api/auth/forgot-password', { email: forgotEmail.trim() });
+      setForgotSuccess(res.data?.message || 'Password reset link sent! Check your email.');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to request password reset.');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+    setResetLoading(true);
+    setError(null);
+    setResetSuccess(null);
+    try {
+      const res = await axios.post('/api/auth/reset-password', {
+        token: resetToken,
+        newPassword,
+      });
+      setResetSuccess(res.data?.message || 'Password updated successfully! Redirecting to sign in...');
+      setTimeout(() => {
+        setMode('login');
+        navigate('/login');
+      }, 2000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to reset password.');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const getRedirectDestination = useCallback((userRole) => {
     if (location.state?.from?.pathname) {
       return `${location.state.from.pathname}${location.state.from.search || ''}`;
     }
     if (userRole === 'admin' || userRole === 'superadmin') return '/admin';
     if (userRole === 'seller') return '/seller/dashboard';
     return '/';
-  };
+  }, [location.state]);
 
   // If already authenticated, redirect
   useEffect(() => {
@@ -50,7 +120,7 @@ export default function AuthPage({ initialMode = 'login' }) {
         state: location.state?.openCartAfterLogin ? { openCartAfterLogin: true } : undefined,
       });
     }
-  }, [isAuthenticated, user, navigate, location]);
+  }, [isAuthenticated, user, navigate, location, getRedirectDestination]);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -311,6 +381,182 @@ export default function AuthPage({ initialMode = 'login' }) {
                 </button>
               </div>
             </div>
+          ) : mode === 'forgot' ? (
+            <div className="text-center space-y-4 py-2">
+              <div className="w-14 h-14 rounded-full bg-amber-50 text-[#795238] border border-amber-200 flex items-center justify-center mx-auto">
+                <KeyRound className="w-7 h-7" />
+              </div>
+              <h2 className="text-xl font-black text-stone-900">Forgot Password</h2>
+              <p className="text-xs text-stone-600 max-w-xs mx-auto">
+                Enter your registered email address and we'll send you a link to reset your password.
+              </p>
+
+              {error && (
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
+                  {error}
+                </div>
+              )}
+
+              {forgotSuccess ? (
+                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs space-y-3">
+                  <p className="font-bold">{forgotSuccess}</p>
+                  <p className="text-[11px] text-stone-600">Please check your inbox or spam folder for the reset email.</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode('login');
+                      setError(null);
+                      setForgotSuccess(null);
+                    }}
+                    className="w-full py-2.5 px-4 rounded-xl bg-[#795238] text-white text-xs font-bold hover:bg-[#603f29] transition cursor-pointer"
+                  >
+                    Back to Sign In
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="space-y-4 text-left pt-2">
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 mb-1">
+                      Email Address *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="email"
+                        required
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        placeholder="yourname@gmail.com"
+                        className="w-full pl-9 pr-3.5 py-2.5 text-xs rounded-xl bg-stone-50 border border-stone-300 focus:outline-none focus:border-[#795238] focus:bg-white transition"
+                      />
+                      <Mail className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={forgotLoading}
+                    className="w-full py-3 px-4 rounded-xl bg-[#795238] hover:bg-[#603f29] text-white text-xs font-bold shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                  >
+                    {forgotLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Sending Link...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Send Password Reset Link</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+
+                  <div className="text-center pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode('login');
+                        setError(null);
+                      }}
+                      className="text-xs font-bold text-stone-600 hover:text-stone-900 cursor-pointer"
+                    >
+                      ← Back to Sign In
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          ) : mode === 'reset' ? (
+            <div className="text-center space-y-4 py-2">
+              <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center mx-auto">
+                <Lock className="w-7 h-7" />
+              </div>
+              <h2 className="text-xl font-black text-stone-900">Set New Password</h2>
+              <p className="text-xs text-stone-600 max-w-xs mx-auto">
+                Enter your new password below to secure your account.
+              </p>
+
+              {error && (
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
+                  {error}
+                </div>
+              )}
+
+              {resetSuccess ? (
+                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs space-y-3">
+                  <CheckCircle2 className="w-6 h-6 text-emerald-600 mx-auto" />
+                  <p className="font-bold">{resetSuccess}</p>
+                </div>
+              ) : (
+                <form onSubmit={handleResetPassword} className="space-y-4 text-left pt-2">
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 mb-1">
+                      New Password *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="password"
+                        required
+                        minLength={6}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="At least 6 characters"
+                        className="w-full pl-9 pr-3.5 py-2.5 text-xs rounded-xl bg-stone-50 border border-stone-300 focus:outline-none focus:border-[#795238] focus:bg-white transition"
+                      />
+                      <Lock className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 mb-1">
+                      Confirm New Password *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="password"
+                        required
+                        minLength={6}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Re-enter new password"
+                        className="w-full pl-9 pr-3.5 py-2.5 text-xs rounded-xl bg-stone-50 border border-stone-300 focus:outline-none focus:border-[#795238] focus:bg-white transition"
+                      />
+                      <Lock className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={resetLoading}
+                    className="w-full py-3 px-4 rounded-xl bg-[#795238] hover:bg-[#603f29] text-white text-xs font-bold shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                  >
+                    {resetLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Updating Password...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Save New Password</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+
+                  <div className="text-center pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode('login');
+                        setError(null);
+                      }}
+                      className="text-xs font-bold text-stone-600 hover:text-stone-900 cursor-pointer"
+                    >
+                      ← Back to Sign In
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           ) : (
             <>
               {/* Contextual Action Notice */}
@@ -498,9 +744,24 @@ export default function AuthPage({ initialMode = 'login' }) {
 
                 {/* Password */}
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">
-                    Password *
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-stone-700">
+                      Password *
+                    </label>
+                    {mode === 'login' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMode('forgot');
+                          setError(null);
+                          setForgotSuccess(null);
+                        }}
+                        className="text-[11px] font-bold text-[#795238] hover:underline cursor-pointer"
+                      >
+                        Forgot Password?
+                      </button>
+                    )}
+                  </div>
                   <div className="relative">
                     <input
                       type="password"

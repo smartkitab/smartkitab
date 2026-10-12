@@ -1,38 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import {
   Package,
   Clock,
   Truck,
   CheckCircle2,
-  XCircle,
   ShoppingBag,
   MapPin,
-  Phone,
   User,
-  Mail,
-  ArrowRight,
   RefreshCw,
   Search,
   BookOpen,
   Sparkles,
-  ChevronRight,
-  ShieldCheck,
   AlertCircle,
-  ExternalLink,
-  Edit3,
   Save,
   Check,
-  RotateCcw,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useCart } from '../context/CartContext';
 
 export default function BuyerDashboard() {
-  const { user, updateUserProfile, refreshUser } = useAuth();
-  const { openCart } = useCart();
-  const navigate = useNavigate();
+  const { user, updateUserProfile } = useAuth();
 
   const [activeTab, setActiveTab] = useState('orders'); // 'orders', 'profile', 'bookcycle'
   const [orders, setOrders] = useState([]);
@@ -68,7 +56,7 @@ export default function BuyerDashboard() {
   }, [user]);
 
   // Fetch orders from API
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoadingOrders(true);
     setErrorOrders(null);
     try {
@@ -82,11 +70,11 @@ export default function BuyerDashboard() {
     } finally {
       setLoadingOrders(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [fetchOrders]);
 
   // Handle order cancellation
   const handleCancelOrder = async (orderId) => {
@@ -332,6 +320,14 @@ export default function BuyerDashboard() {
               </div>
             </div>
 
+            {/* Error Banner */}
+            {errorOrders && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center justify-between text-xs text-red-700">
+                <span>{errorOrders}</span>
+                <button onClick={fetchOrders} className="underline font-bold hover:text-red-900 cursor-pointer">Retry</button>
+              </div>
+            )}
+
             {/* Orders List / Loading / Empty State */}
             {loadingOrders ? (
               <div className="bg-white rounded-3xl p-16 text-center border border-[#795238]/10">
@@ -441,7 +437,7 @@ export default function BuyerDashboard() {
                                 { id: 'processing', label: 'Processing', icon: Package },
                                 { id: 'shipped', label: 'Dispatched', icon: Truck },
                                 { id: 'delivered', label: 'Delivered', icon: CheckCircle2 },
-                              ].map((step, idx) => {
+                              ].map((step) => {
                                 const stepState = getStepState(order.orderStatus, step.id);
                                 const isDone = stepState === 'completed';
                                 const IconComponent = step.icon;

@@ -4,7 +4,6 @@ import {
   BookOpen,
   Search,
   ShoppingCart,
-  User as UserIcon,
   Menu,
   X,
   ChevronDown,
@@ -12,7 +11,6 @@ import {
   Package,
   BookMarked,
   HeartHandshake,
-  ShieldAlert,
   ShieldCheck,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -31,21 +29,9 @@ export default function Navbar({
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Consume Contexts (with fallback if context is not yet mounted)
-  let cartCtx = null;
-  let authCtx = null;
-
-  try {
-    cartCtx = useCart();
-  } catch {
-    cartCtx = null;
-  }
-
-  try {
-    authCtx = useAuth();
-  } catch {
-    authCtx = null;
-  }
+  // Consume Contexts
+  const cartCtx = useCart();
+  const authCtx = useAuth();
 
   const activeCartCount = propCartCount !== undefined ? propCartCount : (cartCtx?.cartCount ?? 0);
   const currentUser = propUser !== undefined ? propUser : authCtx?.user;
@@ -77,19 +63,10 @@ export default function Navbar({
     }
   };
 
-  // Guard: Buy books requires login
+  // Public catalog browsing (no login wall for guests)
   const handleBuyClick = (e) => {
     if (e) e.preventDefault();
-    if (!currentUser) {
-      navigate('/login', {
-        state: {
-          from: { pathname: '/catalog' },
-          message: 'Please log in first to browse and buy books.',
-        },
-      });
-    } else {
-      navigate('/catalog');
-    }
+    navigate('/catalog');
   };
 
   // Guard: Sell books requires login

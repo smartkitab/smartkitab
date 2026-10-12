@@ -80,6 +80,15 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    resetPasswordToken: {
+      type: String,
+      default: null,
+      index: true,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      default: null,
+    },
     permissions: {
       canManageBooks: { type: Boolean, default: true },
       canManageOrders: { type: Boolean, default: true },

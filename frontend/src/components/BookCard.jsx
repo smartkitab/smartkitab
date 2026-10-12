@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingCart, CheckCircle2, Bookmark, Star } from 'lucide-react';
+import { ShoppingCart, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function BookCard({ book, onAddToCart = () => {} }) {

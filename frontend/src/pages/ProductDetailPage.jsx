@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { useCart } from '../context/CartContext';
 import {
   ShoppingCart,
   Zap,
@@ -11,9 +10,6 @@ import {
   Truck,
   RotateCcw,
   ArrowLeft,
-  Share2,
-  Heart,
-  Star,
   MapPin,
   UserCheck,
 } from 'lucide-react';
@@ -50,7 +46,6 @@ export default function ProductDetailPage({ onAddToCart = () => {} }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated } = useAuth();
-  const { openCart, addToCart } = useCart();
 
   const [book, setBook] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -136,11 +131,7 @@ export default function ProductDetailPage({ onAddToCart = () => {} }) {
       });
       return;
     }
-    if (typeof onAddToCart === 'function') {
-      onAddToCart(currentBook);
-    } else {
-      addToCart(currentBook);
-    }
+    onAddToCart(currentBook);
     setToastMessage(`Added "${currentBook.title}" to your cart!`);
     setTimeout(() => setToastMessage(null), 3000);
   };
@@ -155,12 +146,8 @@ export default function ProductDetailPage({ onAddToCart = () => {} }) {
       });
       return;
     }
-    if (typeof onAddToCart === 'function') {
-      onAddToCart(currentBook);
-    } else {
-      addToCart(currentBook);
-    }
-    openCart();
+    onAddToCart(currentBook);
+    alert('Proceeding to checkout with ' + currentBook.title);
   };
 
   return (

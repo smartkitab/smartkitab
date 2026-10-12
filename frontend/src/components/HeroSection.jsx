@@ -6,7 +6,6 @@ import {
   Sparkles,
   ShieldCheck,
   CheckCircle2,
-  ArrowRight,
   BookMarked,
   Star,
 } from 'lucide-react';

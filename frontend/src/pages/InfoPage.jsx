@@ -1,23 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import {
-  BookOpen,
   HelpCircle,
   Truck,
   ShieldCheck,
   FileText,
   Lock,
   ChevronDown,
-  CheckCircle2,
-  ArrowRight,
   RotateCcw,
   HeartHandshake,
   Users,
-  Award,
   Sparkles,
-  Search,
   DollarSign,
-  Package,
 } from 'lucide-react';
 
 const TABS = [
@@ -34,11 +28,11 @@ export default function InfoPage({ initialTab = 'about' }) {
   const navigate = useNavigate();
 
   // Determine active tab based on pathname or initialTab
-  const getTabFromPath = () => {
+  const getTabFromPath = useCallback(() => {
     const path = location.pathname.replace('/', '');
     const found = TABS.find((t) => t.id === path);
     return found ? found.id : initialTab;
-  };
+  }, [location.pathname, initialTab]);
 
   const [activeTab, setActiveTab] = useState(getTabFromPath());
   const [expandedFaq, setExpandedFaq] = useState(0);
@@ -46,7 +40,7 @@ export default function InfoPage({ initialTab = 'about' }) {
   useEffect(() => {
     setActiveTab(getTabFromPath());
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [location.pathname]);
+  }, [getTabFromPath]);
 
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);

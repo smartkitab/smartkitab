@@ -1,37 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import {
   BookOpen,
   Plus,
   Clock,
   CheckCircle2,
-  XCircle,
   TrendingUp,
-  DollarSign,
   Edit3,
   Trash2,
   Search,
   RefreshCw,
-  Eye,
   AlertCircle,
   Save,
   Check,
   CreditCard,
-  Phone,
-  User,
   ShoppingBag,
-  HeartHandshake,
   Tag,
-  Layers,
-  ArrowRight,
   ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function SellerDashboard() {
   const { user, updateUserProfile } = useAuth();
-  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('listings'); // 'listings', 'payouts', 'guidelines'
   const [books, setBooks] = useState([]);
@@ -76,7 +67,7 @@ export default function SellerDashboard() {
   const [payoutMessage, setPayoutMessage] = useState(null);
 
   // Fetch seller's books and stats
-  const fetchSellerListings = async () => {
+  const fetchSellerListings = useCallback(async () => {
     setLoading(true);
     try {
       const res = await axios.get('/api/books/seller/my-listings');
@@ -91,11 +82,11 @@ export default function SellerDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchSellerListings();
-  }, []);
+  }, [fetchSellerListings]);
 
   // Open Edit Modal
   const openEditModal = (book) => {
@@ -409,7 +400,6 @@ export default function SellerDashboard() {
                   const isPending = book.status === 'pending';
                   const isApproved = book.status === 'approved';
                   const isSold = book.status === 'sold';
-                  const isRejected = book.status === 'rejected';
 
                   return (
                     <div

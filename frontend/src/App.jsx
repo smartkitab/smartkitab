@@ -43,16 +43,7 @@ function HomePage({ onAddToCart }) {
       {sections.showHero !== false && (
         <HeroSection
           onBuyClick={() => {
-            if (!isAuthenticated) {
-              navigate('/login', {
-                state: {
-                  from: { pathname: '/catalog' },
-                  message: 'Please log in first to browse and buy books.',
-                },
-              });
-            } else {
-              navigate('/catalog');
-            }
+            navigate('/catalog');
           }}
           onSellClick={() => {
             if (!isAuthenticated) {

@@ -3,20 +3,13 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
-import path from 'path';
-import { fileURLToPath } from 'url';
-
 import authRoutes from './routes/authRoutes.js';
 import bookRoutes from './routes/bookRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import siteSettingsRoutes from './routes/siteSettingsRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
-import uploadRoutes from './routes/uploadRoutes.js';
 
 dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -25,7 +18,6 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/smartkitab
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database Connection
 mongoose
@@ -73,7 +65,6 @@ app.use('/api/books', bookRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/site-settings', siteSettingsRoutes);
 app.use('/api/orders', orderRoutes);
-app.use('/api/upload', uploadRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

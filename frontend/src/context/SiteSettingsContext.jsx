@@ -269,7 +269,7 @@ export function SiteSettingsProvider({ children }) {
         setSettings(DEFAULT_SITE_SETTINGS);
       }
       return { success: true, message: 'Settings restored to factory defaults!' };
-    } catch (err) {
+    } catch {
       setSettings(DEFAULT_SITE_SETTINGS);
       return { success: true, message: 'Settings restored to defaults (local)!' };
     }

@@ -135,3 +135,72 @@ export const sendVerificationEmail = async ({ to, name, verificationToken, role 
     return { success: false, error: err.message, verificationUrl };
   }
 };
+
+/**
+ * Send password reset email with temporary reset token
+ */
+export const sendPasswordResetEmail = async ({ to, name, resetToken }) => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const resetUrl = `${frontendUrl}/login?resetToken=${resetToken}`;
+  const senderAddress = process.env.EMAIL_FROM || `"SMARTKITAB Support" <${process.env.EMAIL_USER || 'support@smartkitab.com'}>`;
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <title>Reset Your SMARTKITAB Password</title>
+      <style>
+        body { margin: 0; padding: 0; background-color: #FAF6EF; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #292524; }
+        .wrapper { width: 100%; max-width: 600px; margin: 30px auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid rgba(121, 82, 56, 0.15); }
+        .header { background: linear-gradient(135deg, #795238 0%, #543722 100%); padding: 32px 24px; text-align: center; color: #ffffff; }
+        .logo { font-size: 26px; font-weight: 900; margin: 0; }
+        .logo span { color: #E07A5F; }
+        .content { padding: 36px 30px; text-align: left; }
+        .btn { display: inline-block; background-color: #795238; color: #ffffff !important; text-decoration: none; font-size: 15px; font-weight: 800; padding: 14px 34px; border-radius: 14px; }
+      </style>
+    </head>
+    <body>
+      <div class="wrapper">
+        <div class="header">
+          <h1 class="logo">SMART<span>KITAB</span></h1>
+        </div>
+        <div class="content">
+          <h3>Reset Your Password</h3>
+          <p>Namaste ${name || 'Friend'},</p>
+          <p>We received a request to reset your SMARTKITAB account password. Click below to enter a new password (valid for 1 hour):</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" class="btn" target="_blank">Reset Password</a>
+          </div>
+          <p style="font-size: 12px; color: #78716c;">If you did not request this password reset, you can safely ignore this email.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const transporter = createTransporter();
+
+  if (!transporter) {
+    console.log('\n===============================================================');
+    console.log(' [EMAIL SIMULATION] Password Reset requested:');
+    console.log(` Recipient: ${to}`);
+    console.log(` Reset URL: ${resetUrl}`);
+    console.log('===============================================================\n');
+    return { success: true, simulated: true, resetUrl };
+  }
+
+  try {
+    const info = await transporter.sendMail({
+      from: senderAddress,
+      to,
+      subject: 'Reset Your SMARTKITAB Password 🔑',
+      text: `Namaste ${name},\n\nPlease reset your password by visiting: ${resetUrl}\n\nThis link expires in 1 hour.`,
+      html: htmlContent,
+    });
+    return { success: true, messageId: info.messageId, resetUrl };
+  } catch (err) {
+    console.error(`Failed to send password reset email to ${to}:`, err.message);
+    return { success: false, error: err.message, resetUrl };
+  }
+};

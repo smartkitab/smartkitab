@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ShieldAlert, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export default function ProtectedRoute({ children, requiredRole = 'admin' }) {
   const { user, loading, isAuthenticated } = useAuth();

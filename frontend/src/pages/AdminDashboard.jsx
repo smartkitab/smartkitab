@@ -12,7 +12,6 @@ import {
   XCircle,
   Eye,
   ArrowLeft,
-  AlertTriangle,
   ChevronDown,
   ShieldCheck,
   TrendingUp,
@@ -26,7 +25,6 @@ import {
   RotateCcw,
   Sparkles,
   Globe,
-  Percent,
   Truck,
   Phone,
   Mail,
@@ -231,9 +229,6 @@ export default function AdminDashboard() {
   const [pendingBooks, setPendingBooks] = useState(initialFallbackPendingBooks);
   const [allBooks, setAllBooks] = useState([]);
   const [orders, setOrders] = useState(initialSampleOrders);
-  const [users, setUsers] = useState([]);
-  const [userSearch, setUserSearch] = useState('');
-  const [userRoleFilter, setUserRoleFilter] = useState('all');
   const [loading, setLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
@@ -1023,16 +1018,6 @@ export default function AdminDashboard() {
         }
       } catch (e) {
         console.warn('Orders fetch notice:', e.message);
-      }
-
-      // 7. Fetch Platform Users
-      try {
-        const usersRes = await axios.get('/api/admin/users', authHeaders);
-        if (usersRes.data?.users) {
-          setUsers(usersRes.data.users);
-        }
-      } catch (e) {
-        console.warn('Users fetch notice:', e.message);
       }
     } finally {
       setLoading(false);
@@ -1990,147 +1975,36 @@ export default function AdminDashboard() {
         )}
 
         {/* ================= USERS TAB ================= */}
-        {activeTab === 'users' && (() => {
-          const displayUsers = users.length > 0 ? users : [
-            { _id: 'admin-1', name: 'SMARTKITAB Admin', email: 'admin@smartkitab.com', role: 'superadmin', isEmailVerified: true, authProvider: 'local', createdAt: new Date().toISOString() },
-            { _id: 'seller-1', name: 'Sample Seller', email: 'seller@smartkitab.com', role: 'seller', isEmailVerified: true, authProvider: 'local', createdAt: new Date().toISOString() },
-            { _id: 'buyer-1', name: 'Sample Buyer', email: 'buyer@smartkitab.com', role: 'buyer', isEmailVerified: false, authProvider: 'local', createdAt: new Date().toISOString() },
-          ];
-
-          const filteredUsers = displayUsers.filter((u) => {
-            const q = userSearch.toLowerCase().trim();
-            const matchesSearch =
-              !q ||
-              u.name?.toLowerCase().includes(q) ||
-              u.email?.toLowerCase().includes(q) ||
-              u.address?.city?.toLowerCase().includes(q);
-            const matchesRole = userRoleFilter === 'all' || u.role === userRoleFilter;
-            return matchesSearch && matchesRole;
-          });
-
-          return (
-            <section className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-black text-[#795238]">Registered Platform Users</h2>
-                  <p className="text-xs text-stone-500">
-                    Total registered accounts: <span className="font-bold text-[#795238]">{displayUsers.length}</span>
-                  </p>
-                </div>
-
-                {/* Filters */}
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-                    <input
-                      type="text"
-                      placeholder="Search users..."
-                      value={userSearch}
-                      onChange={(e) => setUserSearch(e.target.value)}
-                      className="pl-9 pr-3 py-1.5 text-xs rounded-xl bg-white border border-[#795238]/20 focus:outline-none focus:ring-1 focus:ring-[#795238] w-48 sm:w-60"
-                    />
+        {activeTab === 'users' && (
+          <section className="space-y-4">
+            <h2 className="text-lg font-black text-[#795238]">Registered Platform Users</h2>
+            <div className="bg-white rounded-3xl border border-[#795238]/15 p-6 shadow-sm">
+              <ul className="divide-y divide-[#795238]/10 text-sm">
+                <li className="py-3 flex justify-between items-center">
+                  <div>
+                    <p className="font-bold">SMARTKITAB Admin</p>
+                    <p className="text-xs text-stone-500">admin@smartkitab.com</p>
                   </div>
-
-                  <select
-                    value={userRoleFilter}
-                    onChange={(e) => setUserRoleFilter(e.target.value)}
-                    className="px-3 py-1.5 text-xs rounded-xl bg-white border border-[#795238]/20 focus:outline-none font-bold text-stone-700 cursor-pointer"
-                  >
-                    <option value="all">All Roles</option>
-                    <option value="buyer">Buyers</option>
-                    <option value="seller">Sellers</option>
-                    <option value="admin">Admins</option>
-                    <option value="superadmin">Super Admins</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-3xl border border-[#795238]/15 overflow-hidden shadow-sm">
-                {filteredUsers.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-[#FAF6EF] border-b border-[#795238]/10 text-stone-600 uppercase tracking-wider font-extrabold text-[10px]">
-                        <tr>
-                          <th className="py-3 px-6">User</th>
-                          <th className="py-3 px-6">Role</th>
-                          <th className="py-3 px-6">Verification</th>
-                          <th className="py-3 px-6">Auth Method</th>
-                          <th className="py-3 px-6">Registered On</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#795238]/10 text-stone-700">
-                        {filteredUsers.map((u) => {
-                          const roleColor =
-                            u.role === 'superadmin'
-                              ? 'bg-[#795238] text-white'
-                              : u.role === 'admin'
-                              ? 'bg-blue-100 text-blue-800'
-                              : u.role === 'seller'
-                              ? 'bg-amber-100 text-amber-800'
-                              : 'bg-emerald-100 text-[#365314]';
-
-                          return (
-                            <tr key={u._id} className="hover:bg-stone-50/70 transition">
-                              <td className="py-3.5 px-6">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-8 h-8 rounded-full bg-[#795238]/10 text-[#795238] font-black text-xs flex items-center justify-center uppercase shrink-0">
-                                    {u.name?.charAt(0) || 'U'}
-                                  </div>
-                                  <div>
-                                    <p className="font-bold text-stone-900">{u.name}</p>
-                                    <p className="text-[11px] text-stone-500">{u.email}</p>
-                                    {u.address?.city && (
-                                      <p className="text-[10px] text-stone-400">📍 {u.address.city}</p>
-                                    )}
-                                  </div>
-                                </div>
-                              </td>
-
-                              <td className="py-3.5 px-6">
-                                <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${roleColor}`}>
-                                  {u.role}
-                                </span>
-                              </td>
-
-                              <td className="py-3.5 px-6">
-                                {u.isEmailVerified ? (
-                                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                                    <span>Verified</span>
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                                    <Clock className="w-3 h-3 text-amber-500" />
-                                    <span>Unverified</span>
-                                  </span>
-                                )}
-                              </td>
-
-                              <td className="py-3.5 px-6">
-                                <span className="text-[11px] font-medium text-stone-600 capitalize">
-                                  {u.authProvider === 'google' ? 'Google OAuth' : 'Email & Password'}
-                                </span>
-                              </td>
-
-                              <td className="py-3.5 px-6 text-stone-500 text-[11px]">
-                                {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                  <span className="text-xs font-bold bg-[#795238] text-white px-2.5 py-0.5 rounded-full">Admin</span>
+                </li>
+                <li className="py-3 flex justify-between items-center">
+                  <div>
+                    <p className="font-bold">Sample Seller</p>
+                    <p className="text-xs text-stone-500">seller@smartkitab.com</p>
                   </div>
-                ) : (
-                  <div className="p-8 text-center text-stone-500 space-y-2">
-                    <p className="font-bold text-sm">No users found</p>
-                    <p className="text-xs">No user matches "{userSearch}". Try clearing your search.</p>
+                  <span className="text-xs font-bold bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full">Seller</span>
+                </li>
+                <li className="py-3 flex justify-between items-center">
+                  <div>
+                    <p className="font-bold">Sample Buyer</p>
+                    <p className="text-xs text-stone-500">buyer@smartkitab.com</p>
                   </div>
-                )}
-              </div>
-            </section>
-          );
-        })()}
+                  <span className="text-xs font-bold bg-emerald-100 text-[#365314] px-2.5 py-0.5 rounded-full">Buyer</span>
+                </li>
+              </ul>
+            </div>
+          </section>
+        )}
 
         {/* ================= CMS & STOREFRONT CONTENT MANAGEMENT ================= */}
         {activeTab === 'cms' && (

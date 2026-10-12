@@ -7,7 +7,6 @@ import {
   Mail,
   ArrowRight,
   RefreshCw,
-  BookOpen,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -15,21 +14,21 @@ export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const navigate = useNavigate();
-  const { verifyEmail, resendVerification, isAuthenticated, user } = useAuth();
+  const { verifyEmail, resendVerification, user } = useAuth();
 
-  const [status, setStatus] = useState('verifying'); // 'verifying' | 'success' | 'error'
-  const [message, setMessage] = useState('Verifying your email address...');
+  const [status, setStatus] = useState(() => (token ? 'verifying' : 'error'));
+  const [message, setMessage] = useState(() =>
+    token
+      ? 'Verifying your email address...'
+      : 'No verification token provided in the link. Please check your email link or request a new one.'
+  );
   const [resendEmail, setResendEmail] = useState('');
   const [resending, setResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(null);
   const [resendError, setResendError] = useState(null);
 
   useEffect(() => {
-    if (!token) {
-      setStatus('error');
-      setMessage('No verification token provided in the link. Please check your email link or request a new one.');
-      return;
-    }
+    if (!token) return;
 
     let isMounted = true;
 
@@ -52,7 +51,7 @@ export default function VerifyEmailPage() {
     return () => {
       isMounted = false;
     };
-  }, [token]);
+  }, [token, verifyEmail]);
 
   const handleResend = async (e) => {
     e.preventDefault();

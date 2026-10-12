@@ -1,8 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
-  BookOpen,
   ArrowRight,
   ArrowLeft,
   UploadCloud,
@@ -10,10 +9,7 @@ import {
   AlertCircle,
   Tag,
   HeartHandshake,
-  DollarSign,
-  Image as ImageIcon,
   X,
-  Loader2,
 } from 'lucide-react';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 
@@ -79,68 +75,6 @@ export default function SellBookPage() {
   const [toast, setToast] = useState(null);
   const [submittedBook, setSubmittedBook] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
-
-  const fileInputRef = useRef(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-
-  // File upload handler
-  const handleFileUpload = async (files) => {
-    if (!files || files.length === 0) return;
-    setUploadingImage(true);
-    setErrorMsg('');
-
-    const token = localStorage.getItem('token');
-    const authHeaders = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-
-    const formDataUpload = new FormData();
-    Array.from(files).forEach((file) => {
-      formDataUpload.append('images', file);
-    });
-
-    try {
-      const res = await axios.post('/api/upload', formDataUpload, {
-        ...authHeaders,
-        headers: {
-          ...authHeaders.headers,
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      if (res.data?.urls && res.data.urls.length > 0) {
-        setFormData((prev) => ({
-          ...prev,
-          images: [...prev.images, ...res.data.urls],
-        }));
-        setToast(`${res.data.urls.length} photo(s) uploaded successfully!`);
-      } else if (res.data?.url) {
-        setFormData((prev) => ({
-          ...prev,
-          images: [...prev.images, res.data.url],
-        }));
-        setToast('Photo uploaded successfully!');
-      }
-    } catch (err) {
-      console.warn('Backend upload notice, reading local file data preview:', err.message);
-      // Fallback: Read as base64 data URLs so user can preview & submit without interruption
-      const readers = Array.from(files).map((file) => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target.result);
-          reader.readAsDataURL(file);
-        });
-      });
-      const dataUrls = await Promise.all(readers);
-      setFormData((prev) => ({
-        ...prev,
-        images: [...prev.images, ...dataUrls],
-      }));
-      setToast('Photos attached successfully!');
-    } finally {
-      setUploadingImage(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -669,56 +603,15 @@ export default function SellBookPage() {
                       Book Cover Photos *
                     </label>
 
-                    {/* Hidden Native File Input */}
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      accept="image/jpeg,image/png,image/webp,image/gif"
-                      multiple
-                      onChange={(e) => handleFileUpload(e.target.files)}
-                      className="hidden"
-                    />
-
-                    {/* Interactive Dropzone */}
-                    <div
-                      onClick={() => fileInputRef.current?.click()}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setIsDragging(true);
-                      }}
-                      onDragLeave={() => setIsDragging(false)}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        setIsDragging(false);
-                        if (e.dataTransfer?.files) {
-                          handleFileUpload(e.dataTransfer.files);
-                        }
-                      }}
-                      className={`p-6 border-2 border-dashed rounded-2xl text-center transition cursor-pointer flex flex-col items-center justify-center ${
-                        isDragging
-                          ? 'border-[#795238] bg-amber-50 scale-[1.01]'
-                          : 'border-primary-brown/30 bg-light-cream/30 hover:bg-light-cream/60'
-                      }`}
-                    >
-                      {uploadingImage ? (
-                        <div className="flex flex-col items-center gap-2 py-2">
-                          <Loader2 className="w-8 h-8 text-primary-brown animate-spin" />
-                          <p className="text-xs font-bold text-stone-700">Uploading photos...</p>
-                        </div>
-                      ) : (
-                        <>
-                          <UploadCloud className="w-10 h-10 text-primary-brown/70 mb-2" />
-                          <p className="text-xs sm:text-sm font-bold text-stone-800">
-                            Click to browse or drag & drop photos here
-                          </p>
-                          <p className="text-xs text-stone-500 mt-0.5">
-                            Upload clear photos of front cover, spine, or inner page (JPEG, PNG, WEBP)
-                          </p>
-                          <span className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-primary-brown/20 rounded-xl text-xs font-bold text-primary-brown shadow-xs hover:bg-[#FAF6EF]">
-                            <ImageIcon className="w-3.5 h-3.5" /> Select from Device / Camera
-                          </span>
-                        </>
-                      )}
+                    {/* Dropzone Container */}
+                    <div className="p-6 border-2 border-dashed border-primary-brown/30 rounded-2xl bg-light-cream/30 text-center hover:bg-light-cream/50 transition">
+                      <UploadCloud className="w-10 h-10 text-primary-brown/70 mx-auto mb-2" />
+                      <p className="text-xs sm:text-sm font-bold text-stone-800">
+                        Upload clear photos of front cover, spine, and inner page
+                      </p>
+                      <p className="text-xs text-stone-500 mt-0.5">
+                        JPEG or PNG images supported
+                      </p>
                     </div>
 
                     {/* URL Input Helper */}

@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import Book from '../models/Book.js';
+import BookRequest from '../models/BookRequest.js';
 
 export const getAllBooks = async (req, res) => {
   try {
@@ -407,6 +408,89 @@ export const deleteSellerBook = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Failed to delete book listing',
+      error: error.message,
+    });
+  }
+};
+
+// ================= BOOK REQUESTS (WANTED BOOKS) =================
+
+// Create a new request for an unlisted book
+export const createBookRequest = async (req, res) => {
+  try {
+    const { title, author, category } = req.body;
+
+    if (!title || !title.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Book title is required for a book request',
+      });
+    }
+
+    const newRequest = await BookRequest.create({
+      userId: req.user._id,
+      title: title.trim(),
+      author: (author || '').trim(),
+      category: (category || '').trim(),
+      status: 'open',
+    });
+
+    const populatedRequest = await BookRequest.findById(newRequest._id).populate(
+      'userId',
+      'name email'
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: `Book request for "${newRequest.title}" submitted successfully!`,
+      request: populatedRequest,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to submit book request',
+      error: error.message,
+    });
+  }
+};
+
+// Get all open book requests (for sellers/community to view wanted titles)
+export const getAllBookRequests = async (req, res) => {
+  try {
+    const requests = await BookRequest.find({ status: 'open' })
+      .populate('userId', 'name email address')
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: requests.length,
+      requests,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch book requests',
+      error: error.message,
+    });
+  }
+};
+
+// Get the authenticated user's own book requests
+export const getMyBookRequests = async (req, res) => {
+  try {
+    const requests = await BookRequest.find({ userId: req.user._id }).sort({
+      createdAt: -1,
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: requests.length,
+      requests,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch your book requests',
       error: error.message,
     });
   }
