@@ -38,6 +38,7 @@ export default function CartDrawer() {
   const [submittingOrder, setSubmittingOrder] = useState(false);
   const [orderError, setOrderError] = useState(null);
   const [placedOrder, setPlacedOrder] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState('COD'); // 'COD', 'eSewa', 'Khalti', 'Bank Transfer'
 
   // Address inputs
   const [shippingAddress, setShippingAddress] = useState({
@@ -102,6 +103,7 @@ export default function CartDrawer() {
           city: shippingAddress.city,
         },
         totalAmount: finalTotal,
+        paymentMethod,
       };
 
       const res = await axios.post('/api/orders', orderPayload);
@@ -186,8 +188,12 @@ export default function CartDrawer() {
                     <span className="font-bold">Rs. {placedOrder.totalAmount}</span>
                   </div>
                   <div className="flex justify-between text-stone-600">
-                    <span>Payment:</span>
-                    <span className="font-bold text-amber-700">Cash on Delivery</span>
+                    <span>Payment Method:</span>
+                    <span className="font-bold text-[#795238]">
+                      {placedOrder.paymentMethod === 'COD'
+                        ? 'Cash on Delivery (Pay at Doorstep)'
+                        : `${placedOrder.paymentMethod || 'Digital Pay'}`}
+                    </span>
                   </div>
                 </div>
               )}
@@ -255,30 +261,63 @@ export default function CartDrawer() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-[11px] font-bold text-stone-600 mb-1">City</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Kathmandu"
-                        value={shippingAddress.city}
-                        onChange={(e) =>
-                          setShippingAddress({ ...shippingAddress, city: e.target.value })
-                        }
-                        className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-[#795238]/20 focus:border-[#795238] outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-stone-600 mb-1">
-                        Payment Mode
-                      </label>
-                      <input
-                        type="text"
-                        disabled
-                        value="Cash on Delivery"
-                        className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 text-xs text-stone-600 font-bold"
-                      />
+                  <div>
+                    <label className="block text-[11px] font-bold text-stone-600 mb-1">City *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Kathmandu"
+                      value={shippingAddress.city}
+                      onChange={(e) =>
+                        setShippingAddress({ ...shippingAddress, city: e.target.value })
+                      }
+                      className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs focus:ring-2 focus:ring-[#795238]/20 focus:border-[#795238] outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-stone-700 mb-1.5 uppercase tracking-wider">
+                      Select Payment Method *
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('COD')}
+                        className={`p-2.5 rounded-xl border text-center transition cursor-pointer flex flex-col items-center gap-1 ${
+                          paymentMethod === 'COD'
+                            ? 'border-[#795238] bg-[#FAF6EF] text-[#795238] font-bold shadow-xs'
+                            : 'border-stone-200 text-stone-600 hover:bg-stone-50 font-medium'
+                        }`}
+                      >
+                        <Truck className="w-4 h-4" />
+                        <span className="text-[11px] leading-tight">Cash on Delivery</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('eSewa')}
+                        className={`p-2.5 rounded-xl border text-center transition cursor-pointer flex flex-col items-center gap-1 ${
+                          paymentMethod === 'eSewa'
+                            ? 'border-emerald-600 bg-emerald-50 text-emerald-800 font-bold shadow-xs'
+                            : 'border-stone-200 text-stone-600 hover:bg-stone-50 font-medium'
+                        }`}
+                      >
+                        <span className="w-4 h-4 rounded-full bg-emerald-600 text-white font-black text-[9px] flex items-center justify-center">e</span>
+                        <span className="text-[11px] leading-tight">eSewa Wallet</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('Khalti')}
+                        className={`p-2.5 rounded-xl border text-center transition cursor-pointer flex flex-col items-center gap-1 ${
+                          paymentMethod === 'Khalti'
+                            ? 'border-purple-600 bg-purple-50 text-purple-800 font-bold shadow-xs'
+                            : 'border-stone-200 text-stone-600 hover:bg-stone-50 font-medium'
+                        }`}
+                      >
+                        <span className="w-4 h-4 rounded-full bg-purple-600 text-white font-black text-[9px] flex items-center justify-center">K</span>
+                        <span className="text-[11px] leading-tight">Khalti Wallet</span>
+                      </button>
                     </div>
                   </div>
 

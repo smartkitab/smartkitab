@@ -999,6 +999,28 @@ export default function AdminDashboard() {
       } catch (e) {
         console.warn('Staff fetch notice:', e.message);
       }
+
+      // 6. Fetch Live Orders
+      try {
+        const ordersRes = await axios.get('/api/orders/all', authHeaders);
+        if (ordersRes.data?.orders && ordersRes.data.orders.length > 0) {
+          setOrders(
+            ordersRes.data.orders.map((ord) => ({
+              _id: ord._id,
+              buyerName: ord.shippingAddress?.name || ord.buyerId?.name || 'Buyer',
+              buyerEmail: ord.buyerId?.email || '',
+              itemsCount: ord.items?.length || 0,
+              totalAmount: ord.totalAmount || 0,
+              paymentMethod: ord.paymentMethod || 'COD',
+              paymentStatus: ord.paymentStatus || 'pending',
+              orderStatus: ord.orderStatus || 'pending',
+              createdAt: ord.createdAt,
+            }))
+          );
+        }
+      } catch (e) {
+        console.warn('Orders fetch notice:', e.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -1093,11 +1115,27 @@ export default function AdminDashboard() {
   };
 
   // 4. Handle Order Status Change
-  const handleOrderStatusChange = (orderId, newStatus) => {
+  const handleOrderStatusChange = async (orderId, newStatus) => {
+    const token = localStorage.getItem('token');
+    const authHeaders = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+
     setOrders((prev) =>
       prev.map((ord) => (ord._id === orderId ? { ...ord, orderStatus: newStatus } : ord))
     );
-    showToast(`Order ${orderId} status updated to ${newStatus}.`);
+
+    try {
+      const res = await axios.patch(
+        `/api/orders/${orderId}/status`,
+        { orderStatus: newStatus },
+        authHeaders
+      );
+      if (res.data?.success) {
+        showToast(`Order status updated to "${newStatus}"!`);
+      }
+    } catch (err) {
+      console.warn('Order status update error:', err.message);
+      showToast(`Status updated locally to "${newStatus}".`);
+    }
   };
 
   // Filtered Pending Books by Search
@@ -1809,10 +1847,10 @@ export default function AdminDashboard() {
                           Rs. {ord.totalAmount}
                         </td>
 
-                        {/* Payment Status Badge */}
-                        <td className="py-4 px-6">
+                        {/* Payment Status Badge & Method */}
+                        <td className="py-4 px-6 space-y-1">
                           <span
-                            className={`text-[11px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                            className={`inline-block text-[11px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
                               ord.paymentStatus === 'completed'
                                 ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                                 : ord.paymentStatus === 'pending'
@@ -1821,6 +1859,9 @@ export default function AdminDashboard() {
                             }`}
                           >
                             {ord.paymentStatus}
+                          </span>
+                          <span className="block text-[10px] font-bold text-stone-500">
+                            via {ord.paymentMethod || 'COD'}
                           </span>
                         </td>
 

@@ -14,7 +14,13 @@ export const createOrder = async (req, res) => {
       });
     }
 
-    if (!shippingAddress || !shippingAddress.name || !shippingAddress.phone || !shippingAddress.address || !shippingAddress.city) {
+    if (
+      !shippingAddress ||
+      !shippingAddress.name ||
+      !shippingAddress.phone ||
+      !shippingAddress.address ||
+      !shippingAddress.city
+    ) {
       return res.status(400).json({
         success: false,
         message: 'Complete shipping address (name, phone, address, city) is required',
@@ -27,7 +33,7 @@ export const createOrder = async (req, res) => {
       price: Number(item.price || item.sellingPrice || 0),
     }));
 
-    // Verify valid book IDs
+    // Verify valid book IDs format
     for (const item of sanitizedItems) {
       if (!mongoose.Types.ObjectId.isValid(item.bookId)) {
         return res.status(400).json({
@@ -37,6 +43,33 @@ export const createOrder = async (req, res) => {
       }
     }
 
+    const bookIds = sanitizedItems.map((item) => item.bookId);
+
+    // Verify all books exist and are currently active ('approved')
+    const existingBooks = await Book.find({ _id: { $in: bookIds } });
+    if (existingBooks.length !== bookIds.length) {
+      return res.status(404).json({
+        success: false,
+        message: 'One or more books in your cart could not be found.',
+      });
+    }
+
+    // Check if any book is already sold or not approved
+    const unavailableBook = existingBooks.find((book) => book.status !== 'approved');
+    if (unavailableBook) {
+      return res.status(400).json({
+        success: false,
+        message: `The book "${unavailableBook.title}" is no longer available (already sold or unlisted).`,
+      });
+    }
+
+    // Normalize payment method
+    const validPaymentMethods = ['COD', 'eSewa', 'Khalti', 'Bank Transfer'];
+    const chosenPaymentMethod = validPaymentMethods.includes(paymentMethod)
+      ? paymentMethod
+      : 'COD';
+
+    // Create the order
     const newOrder = await Order.create({
       buyerId: req.user._id,
       items: sanitizedItems,
@@ -47,9 +80,16 @@ export const createOrder = async (req, res) => {
         address: shippingAddress.address.trim(),
         city: shippingAddress.city.trim(),
       },
+      paymentMethod: chosenPaymentMethod,
       paymentStatus: 'pending',
       orderStatus: 'pending',
     });
+
+    // Mark purchased books as 'sold' so they cannot be purchased again
+    await Book.updateMany(
+      { _id: { $in: bookIds } },
+      { $set: { status: 'sold' } }
+    );
 
     const populatedOrder = await Order.findById(newOrder._id).populate({
       path: 'items.bookId',
@@ -62,6 +102,7 @@ export const createOrder = async (req, res) => {
       order: populatedOrder,
     });
   } catch (error) {
+    console.error('Create order error:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to create order',
@@ -126,9 +167,16 @@ export const cancelMyOrder = async (req, res) => {
     order.paymentStatus = 'failed';
     await order.save();
 
+    // Restock books back to 'approved' so they appear in catalog again
+    const bookIds = order.items.map((item) => item.bookId);
+    await Book.updateMany(
+      { _id: { $in: bookIds }, status: 'sold' },
+      { $set: { status: 'approved' } }
+    );
+
     return res.status(200).json({
       success: true,
-      message: 'Order cancelled successfully',
+      message: 'Order cancelled successfully and books returned to inventory',
       order,
     });
   } catch (error) {
@@ -154,7 +202,7 @@ export const getAllOrders = async (req, res) => {
       .populate('buyerId', 'name email address')
       .populate({
         path: 'items.bookId',
-        select: 'title author originalPrice sellingPrice images condition category',
+        select: 'title author originalPrice sellingPrice images condition category sellerId',
       })
       .sort({ createdAt: -1 });
 
@@ -185,9 +233,22 @@ export const updateOrderStatus = async (req, res) => {
       });
     }
 
+    const currentOrder = await Order.findById(id);
+    if (!currentOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found',
+      });
+    }
+
     const updateFields = {};
     if (orderStatus) updateFields.orderStatus = orderStatus;
-    if (paymentStatus) updateFields.paymentStatus = paymentStatus;
+    if (paymentStatus) {
+      updateFields.paymentStatus = paymentStatus;
+    } else if (orderStatus === 'delivered' && currentOrder.paymentStatus === 'pending') {
+      // For COD, when delivered, payment is completed
+      updateFields.paymentStatus = 'completed';
+    }
 
     const updatedOrder = await Order.findByIdAndUpdate(
       id,
@@ -197,14 +258,26 @@ export const updateOrderStatus = async (req, res) => {
       .populate('buyerId', 'name email address')
       .populate({
         path: 'items.bookId',
-        select: 'title author originalPrice sellingPrice images condition category',
+        select: 'title author originalPrice sellingPrice images condition category sellerId',
       });
 
-    if (!updatedOrder) {
-      return res.status(404).json({
-        success: false,
-        message: 'Order not found',
-      });
+    // Handle book stock adjustments based on status transitions
+    const bookIds = updatedOrder.items.map((item) =>
+      item.bookId?._id ? item.bookId._id : item.bookId
+    );
+
+    if (orderStatus === 'cancelled') {
+      // Re-list books if order was cancelled
+      await Book.updateMany(
+        { _id: { $in: bookIds }, status: 'sold' },
+        { $set: { status: 'approved' } }
+      );
+    } else if (currentOrder.orderStatus === 'cancelled' && orderStatus !== 'cancelled') {
+      // Re-mark books as sold if reactivated
+      await Book.updateMany(
+        { _id: { $in: bookIds } },
+        { $set: { status: 'sold' } }
+      );
     }
 
     return res.status(200).json({
@@ -220,4 +293,3 @@ export const updateOrderStatus = async (req, res) => {
     });
   }
 };
-

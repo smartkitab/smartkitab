@@ -68,6 +68,14 @@ const orderSchema = new mongoose.Schema(
       type: shippingAddressSchema,
       required: [true, 'Shipping address is required'],
     },
+    paymentMethod: {
+      type: String,
+      enum: {
+        values: ['COD', 'eSewa', 'Khalti', 'Bank Transfer'],
+        message: '{VALUE} is not a valid payment method',
+      },
+      default: 'COD',
+    },
     paymentStatus: {
       type: String,
       enum: {
@@ -93,4 +101,3 @@ const orderSchema = new mongoose.Schema(
 const Order = mongoose.model('Order', orderSchema);
 
 export default Order;
-

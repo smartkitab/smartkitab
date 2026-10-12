@@ -406,8 +406,8 @@ export default function BuyerDashboard() {
                             <span>{order.orderStatus}</span>
                           </span>
 
-                          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FAF6EF] text-stone-600 border border-stone-200">
-                            Payment: {order.paymentStatus === 'completed' ? 'Paid' : 'COD / Pending'}
+                          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FAF6EF] text-stone-700 border border-stone-200">
+                            {order.paymentMethod || 'COD'} &bull; {order.paymentStatus === 'completed' ? 'Paid' : 'Pending'}
                           </span>
                         </div>
                       </div>
