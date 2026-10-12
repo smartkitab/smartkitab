@@ -27,13 +27,16 @@ const createTransporter = () => {
     });
   }
 
-  // Default to standard Gmail service
+  // Default to standard Gmail service with explicit timeouts
   return nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: emailUser,
       pass: emailPass,
     },
+    connectionTimeout: 8000,
+    greetingTimeout: 6000,
+    socketTimeout: 10000,
   });
 };
 
@@ -131,8 +134,8 @@ export const sendVerificationEmail = async ({ to, name, verificationToken, role 
     return { success: true, messageId: info.messageId, verificationUrl };
   } catch (err) {
     console.error(`Failed to send verification email to ${to}:`, err.message);
-    // Return simulated info so user flow does not crash
-    return { success: false, error: err.message, verificationUrl };
+    // Return simulated info so user flow does not crash and dev can still activate
+    return { success: false, error: err.message, verificationUrl, simulated: true };
   }
 };
 

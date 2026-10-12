@@ -26,8 +26,24 @@ export const register = async (req, res) => {
       });
     }
 
+    const cleanEmail = email.toLowerCase().trim();
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(cleanEmail) || cleanEmail.includes('..')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please enter a valid email address (e.g. name@gmail.com)',
+      });
+    }
+
+    if (/@gmail\.[a-z]{1}\.[a-z]+$/i.test(cleanEmail) || /@gmail\.c\.?om$/i.test(cleanEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Your email domain appears misspelled (e.g. @gmail.c.om). Please check your email spelling.',
+      });
+    }
+
     // Check if user already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
+    const existingUser = await User.findOne({ email: cleanEmail });
     if (existingUser) {
       if (!existingUser.isVerified) {
         // User previously registered but has not yet verified email.
@@ -98,7 +114,7 @@ export const register = async (req, res) => {
     return res.status(201).json({
       success: true,
       requiresVerification: true,
-      message: 'Account created! An activation link has been sent to your Gmail/email. Please click the link to activate your account.',
+      message: 'Account created! If your email address is valid, an activation link has been sent to it. Please check your inbox or spam folder to activate your account.',
       email: newUser.email,
       verificationUrl: emailResult.simulated ? emailResult.verificationUrl : undefined,
     });

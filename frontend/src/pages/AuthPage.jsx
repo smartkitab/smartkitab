@@ -217,6 +217,18 @@ export default function AuthPage({ initialMode = 'login' }) {
         setLoading(false);
         return;
       }
+      const emailVal = formData.email.trim();
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailVal || !emailRegex.test(emailVal) || emailVal.includes('..')) {
+        setError('Please enter a valid email address (e.g. name@gmail.com)');
+        setLoading(false);
+        return;
+      }
+      if (/@gmail\.[a-z]{1}\.[a-z]+$/i.test(emailVal) || /@gmail\.c\.?om$/i.test(emailVal)) {
+        setError('Your email domain appears misspelled (e.g. @gmail.c.om). Please check your email spelling.');
+        setLoading(false);
+        return;
+      }
       if (formData.password.length < 6) {
         setError('Password must be at least 6 characters');
         setLoading(false);
@@ -316,14 +328,14 @@ export default function AuthPage({ initialMode = 'login' }) {
                 <span className="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-[11px] font-extrabold uppercase tracking-wider mb-2">
                   Activation Link Sent
                 </span>
-                <h3 className="text-xl font-black text-stone-900">Check Your Gmail Inbox</h3>
+                <h3 className="text-xl font-black text-stone-900">Check Your Inbox</h3>
                 <p className="text-xs text-stone-600 mt-1.5 leading-relaxed">
-                  We've sent a verification link to:
+                  If this email address is valid and active, an activation link has been sent to:
                   <br />
                   <strong className="text-stone-900 font-bold">{verificationPending.email}</strong>
                 </p>
                 <p className="text-[11px] text-stone-500 mt-2">
-                  Please click the link in your email to activate your account and start using SMARTKITAB.
+                  Please check your inbox (including your <strong>Spam / Junk</strong> folder) and click the link to activate your account.
                 </p>
               </div>
 
