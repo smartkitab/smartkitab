@@ -27,11 +27,41 @@ export const register = async (req, res) => {
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
     if (existingUser) {
+      if (!existingUser.isVerified) {
+        // User previously registered but has not yet verified email.
+        // Update password/name if needed, generate a fresh activation token, and resend verification.
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+        const salt = await bcrypt.genSalt(10);
+        existingUser.password = await bcrypt.hash(password, salt);
+        existingUser.name = name.trim() || existingUser.name;
+        existingUser.verificationToken = verificationToken;
+        existingUser.verificationTokenExpires = verificationTokenExpires;
+        if (address) existingUser.address = { ...existingUser.address, ...address };
+        await existingUser.save();
+
+        const emailResult = await sendVerificationEmail({
+          to: existingUser.email,
+          name: existingUser.name,
+          verificationToken,
+          role: existingUser.role,
+        });
+
+        return res.status(200).json({
+          success: true,
+          requiresVerification: true,
+          message: 'An unverified account with this email already exists. A fresh activation link has been sent to your Gmail/email.',
+          email: existingUser.email,
+          verificationUrl: emailResult.simulated ? emailResult.verificationUrl : undefined,
+        });
+      }
+
       return res.status(409).json({
         success: false,
-        message: 'A user with this email already exists',
+        message: 'An active account with this email already exists. Please sign in or reset your password.',
       });
     }
 
