@@ -41,10 +41,29 @@ const createTransporter = () => {
 };
 
 /**
+ * Resolves the frontend URL dynamically from the request headers
+ * (so links automatically point to Vercel, Render, or localhost depending on where the user accessed the site)
+ */
+export const resolveFrontendUrl = (req) => {
+  if (req?.headers?.origin) {
+    return req.headers.origin.replace(/\/$/, '');
+  }
+  if (req?.headers?.referer) {
+    try {
+      const url = new URL(req.headers.referer);
+      return `${url.protocol}//${url.host}`;
+    } catch {
+      // ignore
+    }
+  }
+  return (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+};
+
+/**
  * Send an account verification email to a buyer or seller
  */
-export const sendVerificationEmail = async ({ to, name, verificationToken, role }) => {
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+export const sendVerificationEmail = async ({ to, name, verificationToken, role, req }) => {
+  const frontendUrl = resolveFrontendUrl(req);
   const verificationUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
   const senderAddress = process.env.EMAIL_FROM || `"SMARTKITAB" <${process.env.EMAIL_USER || 'support@smartkitab.com'}>`;
 
@@ -142,8 +161,8 @@ export const sendVerificationEmail = async ({ to, name, verificationToken, role 
 /**
  * Send password reset email with temporary reset token
  */
-export const sendPasswordResetEmail = async ({ to, name, resetToken }) => {
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+export const sendPasswordResetEmail = async ({ to, name, resetToken, req }) => {
+  const frontendUrl = resolveFrontendUrl(req);
   const resetUrl = `${frontendUrl}/login?resetToken=${resetToken}`;
   const senderAddress = process.env.EMAIL_FROM || `"SMARTKITAB Support" <${process.env.EMAIL_USER || 'support@smartkitab.com'}>`;
 

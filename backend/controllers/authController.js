@@ -64,6 +64,7 @@ export const register = async (req, res) => {
           name: existingUser.name,
           verificationToken,
           role: existingUser.role,
+          req,
         });
 
         return res.status(200).json({
@@ -109,6 +110,7 @@ export const register = async (req, res) => {
       name: newUser.name,
       verificationToken,
       role: newUser.role,
+      req,
     });
 
     return res.status(201).json({
@@ -230,6 +232,7 @@ export const resendVerificationEmail = async (req, res) => {
       name: user.name,
       verificationToken,
       role: user.role,
+      req,
     });
 
     return res.status(200).json({
@@ -549,6 +552,7 @@ export const forgotPassword = async (req, res) => {
       to: user.email,
       name: user.name,
       resetToken,
+      req,
     });
 
     return res.status(200).json({
