@@ -9,6 +9,7 @@ import {
   Send,
   HeartHandshake,
   Check,
+  ExternalLink,
 } from 'lucide-react';
 
 export default function Footer() {
@@ -267,8 +268,22 @@ export default function Footer() {
       {/* Bottom Bar: Copyright & Socials */}
       <div className="border-t border-[#795238]/15 bg-[#FAF6EF]/80 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-600">
-          
-          <p>{contact.copyright || '© 2026 SMARTKITAB Nepal. All rights reserved.'}</p>
+          <div className="flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 text-center sm:text-left">
+            <p>{contact.copyright || '© 2026 SMARTKITAB Nepal. All rights reserved.'}</p>
+            <span className="hidden sm:inline text-stone-400">•</span>
+            <p className="flex items-center gap-1 text-stone-600">
+              <span>Designed &amp; Developed by</span>
+              <a
+                href="https://aadityakumar.com.np"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-[#795238] hover:text-[#E07A5F] underline underline-offset-2 transition-colors inline-flex items-center gap-0.5 group"
+              >
+                <span>Aaditya Kumar Jha</span>
+                <ExternalLink className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 shrink-0" />
+              </a>
+            </p>
+          </div>
 
           {/* Social Icons dynamically rendered based on CMS settings */}
           <div className="flex items-center gap-3">
